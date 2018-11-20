@@ -181,9 +181,6 @@ int draw_lagrange(int degree)
     G_rgb(1, 0, 0);
 
     // x and y coordinates of each point
-    // TODO: should use a data structure
-//    double x[100];
-//    double y[100];
     Point data[100];
 
     // Store data points
@@ -195,8 +192,6 @@ int draw_lagrange(int degree)
     {
         G_wait_click(point);
         G_fill_circle(point[0], point[1], 2);
-//        x[i] = point[0];
-//        y[i] = point[1];
 
         data[i].x = point[0];
         data[i].y = point[1];
@@ -207,8 +202,6 @@ int draw_lagrange(int degree)
     {
         double start_y = lagrange(degree, (double)i,     data);
         double end_y   = lagrange(degree, (double)i + 1, data);
-//        double start_y = newton(degree, (double)i,     x, y);
-//        double end_y   = newton(degree, (double)i + 1, x, y);
 
         G_line (i, start_y, i + 1, end_y);
     }

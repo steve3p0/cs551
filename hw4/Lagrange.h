@@ -10,19 +10,19 @@
 #ifndef FPTOOLKIT_LAGRANGE_H
 #define FPTOOLKIT_LAGRANGE_H
 
+/* Using a data structure to hold each x, y
+ * coordinate that the polynomial passes thru
+ */
 typedef struct point
 {
     double x;
     double y;
 } Point;
 
-//typedef double (*interpolate)(int n, double k, double *x, double *y);
-typedef double (*interpolate)(int n, double k, Point *data);
+typedef double (*interpolate)(int n, double x, Point *data);
 
-//double lagrange(int n, double k, double *x, double *y);
-double lagrange(int n, double k, Point *data);
-//double lagrange_estimate(int i, int n, double k, double *x);
-double lagrange_estimate(int i, int n, double k, Point *data);
+double lagrange(int n, double x, Point *data);
+double lagrange_estimate(int i, int n, double x, Point *data);
 
 
 /* function: lagrange
@@ -30,29 +30,27 @@ double lagrange_estimate(int i, int n, double k, Point *data);
  * the set of data points represented by x, y.
  * Returns a summation of estimated Y coordinates
  * outputs:
- *  pixelY  Estimated Y Coordinate pixel on the window screen
+ *    y  Estimated y - the result of f(x)
  * inputs:
  *    n     number of points (degree)
- *    k     k represents 'k' in f(k) to evaluate
- *    *x    pointer to array of n number of x coordinates
- *    *y    pointer to array of n number of y coordinates
+ *    x     x represents 'x' in f(x) to evaluate
+ *    data  the set of X, Y data points
  */
-//double lagrange(int n, double k, double *x, double *y)
-double lagrange(int n, double k, Point *data)
+double lagrange(int n, double x, Point *data)
 {
-    double pixelY = 0;
+    double y = 0;
 
     int i;
     for (i = 0; i < n; i++)
     {
-        pixelY += lagrange_estimate(i, n, k, data) * data[i].y;
+        y += lagrange_estimate(i, n, x, data) * data[i].y;
     }
 
-    return pixelY;
+    return y;
 }
 
 /* function: lagrange_estimate
- * Estimate Y (pixelY) for a Given X (k) using Lagrange Interpolation
+ * Estimate Y (pixelY) for a Given X (x) using Lagrange Interpolation
  * Note: This function is f(x) that returns y
  * Returns a product of estimated Y coordinates
  * outputs:
@@ -60,27 +58,28 @@ double lagrange(int n, double k, Point *data)
  * inputs:
  *    i     indexer (x sub i)
  *    n     number of points (degree)
- *    k     k represents 'k' in f(k) to evaluate
- *    *x    pointer to array of n number of x coordinates
+ *    x     x represents 'x' in f(x) to evaluate
+ *    data  the set of X, Y data points
  */
-double lagrange_estimate(int i, int n, double k, Point *data)
+double lagrange_estimate(int i, int n, double x, Point *data)
 {
-    double pixelY = 1;
+    double y = 1;
 
     int j;
     for (j = 0; j < n; j++)
     {
         if (j != i)
         {
+            // Don't DIVIDE by ZERO!
             double denominator = data[i].x - data[j].x;
             if (denominator != 0)
             {
-                pixelY *= (k - data[j].x) / denominator;
+                y *= (x - data[j].x) / denominator;
             }
         }
     }
 
-    return pixelY;
+    return y;
 }
 
 #endif //FPTOOLKIT_LAGRANGE_H

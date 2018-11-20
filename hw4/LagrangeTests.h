@@ -21,8 +21,6 @@
 typedef struct test_input
 {
     int n;
-//    double x[100];
-//    double y[100];
     Point data[100];
     double k;
 } TestInput;
@@ -56,7 +54,7 @@ int run_test(char *test_name, interpolate f, TestInput *input, double expect)
         printf("\t  Actual Value: %f\n", actual);
         printf("\t  Input Values:\n");
         printf("\t\t   n (degree): %d\n", input->n);
-        printf("\t\t k in f(x): %f\n", input->k);
+        printf("\t\t x in f(x): %f\n", input->k);
         printf("\t\t points(x, y): ");
 
         int i;
