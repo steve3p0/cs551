@@ -210,9 +210,7 @@ int draw_lagrange(int degree)
 }
 
 /* Main Menu
- * TODO: Simplify this damn menu code so that draw_lagrange is only called
- * in one place.  It's nice to be able to enter a number OR run some tests,
- * but the menu code is not easy on the eyes.
+ * TODO: Figure out a way to make menus testable.
  */
 int main()
 {
@@ -231,7 +229,14 @@ int main()
         char menu[100];
         scanf("%s", menu);
 
-        if (strlen(menu) == 1)
+        char *ptr;
+        degree = strtol(menu, &ptr, 10);
+
+        if (degree > 0 && degree < 101)
+        {
+            draw_lagrange(degree);
+        }
+        else if (strlen(menu) == 1)
         {
             char choice = toupper(menu[0]);
 
@@ -251,33 +256,13 @@ int main()
                     printf("\n\n");
                     return 0;
                 default:
-                    degree = choice - '0';
-
-                    if (degree > 0 && degree < 10)
-                    {
-
-                        draw_lagrange(degree);
-                    }
-                    else
-                    {
-                        printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
-                    }
-                    break;
+                    printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
             }
         }
         else
         {
-            char *ptr;
-            degree = strtol(menu, &ptr, 10);
-
-            if (degree > 0 && degree < 101)
-            {
-                draw_lagrange(degree);
-            }
-            else
-            {
-                printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
-            }
+            printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
         }
+
     }
 }
