@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(fptoolkit C)
 
-
 set(CMAKE_C_STANDARD 99)
+#set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-lm -lX11")
 set(SOURCE_FILES FPToolkit.h Lagrange.c Lagrange.h LagrangeTests.h Lagrange.c)
 add_executable(fptoolkit ${SOURCE_FILES})

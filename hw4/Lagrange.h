@@ -10,11 +10,20 @@
 #ifndef FPTOOLKIT_LAGRANGE_H
 #define FPTOOLKIT_LAGRANGE_H
 
+typedef struct point
+{
+    double x;
+    double y;
+} Point;
 
-typedef double (*interpolate)(int n, double k, double *x, double *y);
+//typedef double (*interpolate)(int n, double k, double *x, double *y);
+typedef double (*interpolate)(int n, double k, Point *data);
 
-double lagrange(int n, double k, double *x, double *y);
-double lagrange_estimate(int i, int n, double k, double *x);
+//double lagrange(int n, double k, double *x, double *y);
+double lagrange(int n, double k, Point *data);
+//double lagrange_estimate(int i, int n, double k, double *x);
+double lagrange_estimate(int i, int n, double k, Point *data);
+
 
 /* function: lagrange
  * Evaluates a Lagrange polynomial of degree < n that passes thru
@@ -28,14 +37,15 @@ double lagrange_estimate(int i, int n, double k, double *x);
  *    *x    pointer to array of n number of x coordinates
  *    *y    pointer to array of n number of y coordinates
  */
-double lagrange(int n, double k, double *x, double *y)
+//double lagrange(int n, double k, double *x, double *y)
+double lagrange(int n, double k, Point *data)
 {
     double pixelY = 0;
 
     int i;
     for (i = 0; i < n; i++)
     {
-        pixelY += lagrange_estimate(i, n, k, x) * y[i];
+        pixelY += lagrange_estimate(i, n, k, data) * data[i].y;
     }
 
     return pixelY;
@@ -53,7 +63,7 @@ double lagrange(int n, double k, double *x, double *y)
  *    k     k represents 'k' in f(k) to evaluate
  *    *x    pointer to array of n number of x coordinates
  */
-double lagrange_estimate(int i, int n, double k, double *x)
+double lagrange_estimate(int i, int n, double k, Point *data)
 {
     double pixelY = 1;
 
@@ -62,7 +72,11 @@ double lagrange_estimate(int i, int n, double k, double *x)
     {
         if (j != i)
         {
-            pixelY *= (k - x[j]) / (x[i] - x[j]);
+            double denominator = data[i].x - data[j].x;
+            if (denominator != 0)
+            {
+                pixelY *= (k - data[j].x) / denominator;
+            }
         }
     }
 
