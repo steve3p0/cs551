@@ -20,28 +20,28 @@ typedef struct point
     double y;
 } Point;
 
-typedef double (*interpolate)(int n, double x, Point *data);
+typedef void (*find_eq)(int n, Point *data);
 
-double leastsquares(int n, double x, Point *data);
-double leastsquares_estimate(int i, int n, double x, Point *data);
+void  find_equation(int n, Point *data);
+double leastsquares(double x);
 
+// Coefficients for y = ax + b
+double A = 0;
+double B = 0;
 
-/* function: leastsquares
- * Evaluates a Least Squares polynomial of degree < n that passes thru
- * the set of data points represented by x, y.
- * Returns a summation of estimated Y coordinates
+/* function: find_equation
+ * Finds the equation for a best fit using least squares
  * outputs:
- *    y  Estimated y - the result of f(x)
+ *    A    The 'a' part of y = ax + b
+ *    B    The 'b' part of y = ax + b
  * inputs:
- *    n     number of points (degree)
+ *    n     number of points
  *    x     x represents 'x' in f(x) to evaluate
  *    data  the set of X, Y data points
  */
-double leastsquares(int n, double x, Point *data)
+void find_equation(int n, Point *data)
 {
-
     // Data set:
-
     double coef_0deg = 0;
     double coef_B1 = 0;
     double coef_B2 = 0;
@@ -105,7 +105,7 @@ double leastsquares(int n, double x, Point *data)
 
     printf("\n");
 
-    // Partial Derivative of B1
+    // Partial Derivative of B2
     double partialB2_0deg = 0 * coef_0deg;
     double partialB2_B1   = 0 * coef_B1;
     double partialB2_B2   = 1 * coef_B2;
@@ -122,43 +122,48 @@ double leastsquares(int n, double x, Point *data)
 
     printf("\n");
 
-    //return y;
-    return 3.5 + 1.4 * x;
+    // Solve for B1 and B2
 
+    // Solve B2 by substitution with B1
+    double subB2_B2coef = partialB1_B1B2 / (-1 * partialB1_B1sq);
+    double subB2_const  = partialB1_B1   / (-1 * partialB1_B1sq);
+
+    double solveB2_B1coef = partialB2_B1B2 * subB2_B2coef;
+    double solveB2_const  = partialB2_B1B2 * subB2_const;
+    solveB2_B1coef += partialB2_B2sq;
+    solveB2_const  += partialB2_B2;
+
+    solveB2_const = (-1 * solveB2_const); // move to other side
+    double B2 = solveB2_const / solveB2_B1coef;
+
+    // Solve B1 now that you have B2
+    double sub1_const = partialB1_B1B2 * B2 + partialB1_B1;
+    sub1_const = (-1 * sub1_const); // move to other side
+    double B1 = sub1_const / partialB1_B1sq;
+
+    printf("B1: %f\n", B1);
+    printf("B2: %f\n", B2);
+
+    // So in the form of y =  ax + b
+    //                   y = B2x + B1
+
+    A = B2;
+    B = B1;
 }
 
-/* function: leastsquares_estimate
- * Estimate Y (pixelY) for a Given X (x) using Least Squares Regression
- * Note: This function is f(x) that returns y
- * Returns a product of estimated Y coordinates
+/* function: leastsquares
+ * Just apply the y = ax + b
  * outputs:
- *  pixelY  Estimated Y Coordinate pixel on the window screen
+ *    returns y
  * inputs:
- *    i     indexer (x sub i)
- *    n     number of points (degree)
- *    x     x represents 'x' in f(x) to evaluate
- *    data  the set of X, Y data points
+ *    x
  */
-double leastsquares_estimate(int i, int n, double x, Point *data)
+double leastsquares(double x)
 {
-    double y = 1;
-
-    int j;
-    for (j = 0; j < n; j++)
-    {
-        if (j != i)
-        {
-            // Don't DIVIDE by ZERO!
-            double denominator = data[i].x - data[j].x;
-            if (denominator != 0)
-            {
-                y *= (x - data[j].x) / denominator;
-            }
-        }
-    }
-
-    return y;
+    return A * x + B;
 }
+
+
 
 #endif //FPTOOLKIT_LEASTSQUARES_H
 

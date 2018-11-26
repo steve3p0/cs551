@@ -202,11 +202,13 @@ int draw_least_squares(int size)
     //printf("\n\tEnter of the degree of the polynomial to be graphed: ");
     //scanf("%d", &degree);
 
+    find_equation(size, data);
+
     // Draw the Polynomial
     for (i = 0; i < swidth; ++i)
     {
-        double start_y = leastsquares(size, (double) i, data);
-        double end_y   = leastsquares(size, (double) i + 1, data);
+        double start_y = leastsquares((double) i);
+        double end_y   = leastsquares((double) i + 1);
 
         G_line (i, start_y, i + 1, end_y);
     }

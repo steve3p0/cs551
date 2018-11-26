@@ -22,7 +22,6 @@ typedef struct test_input
 {
     int n;
     Point data[100];
-    double k;
 } TestInput;
 
 /* Used to evaluate eequality of double (floating point numbers)
@@ -37,11 +36,14 @@ bool Equality(double a, double b, double epsilon)
 /* This function will run whatever function passed into it
  * Also, the input and expected values are passed in as well.
  */
-int run_test(char *test_name, interpolate f, TestInput *input, double expect)
+int run_test(char *test_name, find_eq f, TestInput *input, double expectA, double expectB)
 {
-    double actual = f(input->n, input->k, input->data);
+    f(input->n, input->data);
 
-    if (Equality(actual, expect, 0.01))
+    bool expectA_pass = Equality(A, expectA, 0.01);
+    bool expectB_pass = Equality(B, expectB, 0.01);
+
+    if (expectA_pass && expectB_pass)
     {
         printf("PASS - %s\n", test_name);
 
@@ -50,11 +52,12 @@ int run_test(char *test_name, interpolate f, TestInput *input, double expect)
     else
     {
         printf("FAIL - %s\n", test_name);
-        printf("\tExpected Value: %f\n", expect);
-        printf("\t  Actual Value: %f\n", actual);
+        printf("\tExpected A Value: %f\n", expectA);
+        printf("\t  Actual A Value: %f\n", A);
+        printf("\tExpected B Value: %f\n", expectB);
+        printf("\t  Actual B Value: %f\n", B);
         printf("\t  Input Values:\n");
         printf("\t\t   n (degree): %d\n", input->n);
-        printf("\t\t x in f(x): %f\n", input->k);
         printf("\t\t points(x, y): ");
 
         int i;
@@ -91,9 +94,9 @@ int test_least_squares()
     // I have to create multiple instances of them.  I free up the memory
     // for each one in function 'run_test'
     count++;
-    TestInput input_wiki_ex = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}, 0};
+    TestInput input_wiki_ex = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}};
     input_ptr = &input_wiki_ex;
-    pass += run_test("test_least_squares_n1_{{0, 0}}", &leastsquares, input_ptr, 0);
+    pass += run_test("test_least_squares_wikipedia_exampe", &find_equation, input_ptr, 1.4, 3.5);
 
 //    count++;
 //    TestInput input_ones = { 1, {{1, 1}}, 1};
