@@ -5,7 +5,7 @@
  * References:
  *   - https://en.wikipedia.org/wiki/Least_squares
  *   - https://en.wikipedia.org/wiki/Polynomial_least_squares
- *   - https://stackoverflow.com/questions/5083465/fast-efficient-least-squares-fit-algorithm-in-c
+ *   - https://www.wikiwand.com/en/Linear_least_squares#/Example
  */
 
 
@@ -22,6 +22,7 @@ typedef struct test_input
 {
     int n;
     Point data[100];
+    int degree;
 } TestInput;
 
 /* Used to evaluate eequality of double (floating point numbers)
@@ -36,7 +37,7 @@ bool Equality(double a, double b, double epsilon)
 /* This function will run whatever function passed into it
  * Also, the input and expected values are passed in as well.
  */
-int run_test(char *test_name, find_eq f, TestInput *input, double expectA, double expectB)
+int run_test(char *test_name, find_eq_linear f, TestInput *input, double expectA, double expectB)
 {
     f(input->n, input->data);
 
@@ -96,7 +97,7 @@ int test_least_squares()
     count++;
     TestInput input_wiki_ex = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}};
     input_ptr = &input_wiki_ex;
-    pass += run_test("test_least_squares_wikipedia_exampe", &find_equation, input_ptr, 1.4, 3.5);
+    pass += run_test("test_least_squares_wikipedia_exampe", &find_equation_linear, input_ptr, 1.4, 3.5);
 
 //    count++;
 //    TestInput input_ones = { 1, {{1, 1}}, 1};

@@ -6,7 +6,7 @@
  *   - Quadratic FPToolkit.c - Dr. David Ely
  *   - https://en.wikipedia.org/wiki/Least_squares
  *   - https://en.wikipedia.org/wiki/Polynomial_least_squares
- *   - https://stackoverflow.com/questions/5083465/fast-efficient-least-squares-fit-algorithm-in-c
+ *   - https://www.wikiwand.com/en/Linear_least_squares#/Example
  *
  * Dependencies:
  *   - X11 Lib https://www.x.org/wiki/ProgrammingDocumentation/
@@ -202,7 +202,7 @@ int draw_least_squares(int size)
     //printf("\n\tEnter of the degree of the polynomial to be graphed: ");
     //scanf("%d", &degree);
 
-    find_equation(size, data);
+    find_equation_linear(size, data);
 
     // Draw the Polynomial
     for (i = 0; i < swidth; ++i)
