@@ -13,47 +13,6 @@ ai(x-xi)^3+bi(x-xi)^2+ci(x-xi)+di*/
 #include "gauss_elimS.h"
 
 
-/********************
-Cubic Spline coefficients calculator
-Function that calculates the values of ai, bi, ci, and di's for the cubic splines:
-ai(x-xi)^3+bi(x-xi)^2+ci(x-xi)+di
-********************/
-void cSCoeffCalc(int n, double h[n], double sig[n+1], double y[n+1], double a[n], double b[n], double c[n], double d[n])
-{
-    int i;
-    for (i = 0; i < n; i++)
-    {
-        a[i] = (sig[i + 1] - sig[i]) / (h[i] * 6.0);
-        b[i] = sig[i] / 2.0;
-        c[i] = (y[i + 1] - y[i]) / h[i] - h[i] * (2 * sig[i] + sig[i + 1]) / 6.0;
-        d[i] = y[i];
-    }
-}
-
-/********************
-Function to generate the tridiagonal augmented matrix
-for cubic spline for equidistant data-points
-Parameters:
-n: no. of data-points
-h: array storing the succesive interval widths
-a: matrix that will hold the generated augmented matrix
-y: array containing the y-axis data-points
-********************/
-void tridiagonalCubicSplineGen(int n, double h[n], double a[n-1][n], double y[n+1]){
-    int i;
-    for(i=0;i<n-1;i++){
-        a[i][i]=2*(h[i]+h[i+1]);
-    }
-    for(i=0;i<n-2;i++){
-        a[i][i+1]=h[i+1];
-        a[i+1][i]=h[i+1];
-    }
-    for(i=1;i<n;i++){
-        a[i-1][n-1]=(y[i+1]-y[i])*6/(double)h[i]-(y[i]-y[i-1])*6/(double)h[i-1];
-    }
-}
-
-
 void saveUserClicks(Point *data, int size)
 {
     double tmp[2];
@@ -76,7 +35,6 @@ void saveUserClicks(Point *data, int size)
 int main()
 {
     int m;
-    int i;
 
     printf("Enter the no. of data-points:\n");
     scanf("%d", &m);
@@ -86,6 +44,7 @@ int main()
     double y[n + 1]; //array to store the y-axis points
 
     printf("Enter the x-axis values:\n");
+    int i;
     for (i = 0; i < n + 1; i++)
     {
         scanf("%lf", &x[i]);
@@ -97,7 +56,7 @@ int main()
         scanf("%lf", &y[i]);
     }
 
-    ////array to store the successive interval widths
+    // array to store the successive interval widths
     double h[n];
     for (i = 0; i < n; i++)
     {
