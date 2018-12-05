@@ -1,104 +1,284 @@
-/*************************************************
-*************CUBIC SPLINE PROGRAM*****************
-*************************************************
-The program asks the user to enter the data-points and then returns the cubic splines equations
-for each interval
-Equation for ith interval being:
-ai(x-xi)^3+bi(x-xi)^2+ci(x-xi)+di*/
+/* Final Project: Natural Cubic Splines Interpolation Library
+ * Steve Braich
+ * CS 551
+ *
+ * Source and References:
+ *   - Quadratic FPToolkit.c - Dr. David Ely
+ *   - https://en.wikipedia.org/wiki/B-spline
+ *   - https://en.wikipedia.org/wiki/Spline_interpolation
+ *   - https://en.wikipedia.org/wiki/Spline_(mathematics)
+ *
+ * Dependencies:
+ *   - X11 Lib https://www.x.org/wiki/ProgrammingDocumentation/
+ *   - LeastSquares.h      - Steve Braich
+ *   - LeastSquaresTests.h - Steve Braich
+ *   - FPToolkit.h         - Dr. David Ely
+ * ======================================================================================================
+ * PARTS OF THIS CODE WERE TAKEN FROM THE FOLLOWING:
+ *
+ *  Quadratic FPToolkit.c : A simple set of graphical tools.
+ *  FPToolkitDemo.c
+ *  Copyright (C) 2018  Ely
+ *
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License (version 3)
+ *  as published by the Free Software Foundation.
+ *
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ *
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ *  This code assumes an underlying X11 environment.
+ *
+ *  Most freshly installed unbuntu environments do not have the X11 developr
+ *  stuff they'll need to do graphics. To download X11 developer stuff, connect
+ *  to the internet and issue the following two commands.  Each will ask for
+ *  your password and each will take a few minutes.  At some Point it might
+ *  even look like nothing is happening....be patient :
+ *
+ *  sudo  apt-get  install  libx11-dev
+ *  sudo  apt-get  install  xorg-dev
+ *
+ * ======================================================================================================
+ *  Modification: Steve Braich
+ *  Renamed FPToolkit.c to FPToolkit.h,
+ *  Reason: This file is a header file, thus it should have a .h extension.
+ *  SEE https://stackoverflow.com/questions/1695224/what-do-c-and-h-file-extensions-mean-to-c
+ *  I am using an IDE (JetBrains CLION) which will get bent out of shape if you don't.
+ *  This IDE allows me to step thru code visually among other great features.
+ * ======================================================================================================
+ *  TO COMPILE AND RUN THIS CODE
+ * ======================================================================================================
+ *  If this file and the following files are in the same directory:
+ *
+ *  - bsplines.c (this file)
+ *  - bsplines.h
+ *  - bsplines.h
+ *  - FPToolkit.h
+ *
+ *  do the following to compile:
+ *
+ *  cc LeastSquares.c -lm -lX11
+ *  ./a.out
+ * ======================================================================================================
+ */
 
-#include<stdio.h>
-#include<math.h>
+#include <stdio.h>
+#include <string.h>
+#include <ctype.h>
 #include "FPToolkit.h"
 #include "splines.h"
-#include "gauss_elimS.h"
 
-
-void saveUserClicks(Point *data, int size)
+/* Test FPI Toolkit Graphics
+ * This function graphs serveral objects using Xll.
+ * Use this code to test the environment works with Xll
+ */
+void test_fpitoolkit_graphics()
 {
-    double tmp[2];
+    int    swidth, sheight ;
+    double lowleftx, lowlefty, width, height ;
+    double x[10], y[10] ;
+    double numxy ;
+    double a[20], b[20] ;
+    double numab ;
+
+    // must do this before you do 'almost' any other graphical tasks
+    swidth = 400 ;  sheight = 600 ;
+    G_init_graphics (swidth,sheight) ;  // interactive graphics
+
+    // clear the screen in a given color
+    G_rgb (0.3, 0.3, 0.3) ; // dark gray
+    G_clear () ;
+
+    // draw a point
+    G_rgb (1.0, 0.0, 0.0) ; // red
+    G_point (200, 580) ; // hard to see
+
+    // draw a line
+    G_rgb (0.0, 1.0, 0.0) ; // green
+    G_line (0,0, swidth-1, sheight-1) ;
+
+    // aligned rectangles
+    G_rgb (0.0, 0.0, 1.0) ; // blue
+    lowleftx = 200 ; lowlefty = 50 ; width = 10 ; height = 30 ;
+    G_rectangle (lowleftx, lowlefty, width, height) ;
+    lowleftx = 250 ;
+    G_fill_rectangle (lowleftx, lowlefty, width, height) ;
+
+    // triangles
+    G_rgb (1.0, 1.0, 0.0) ; // yellow
+    G_triangle (10, 300,  40,300,  60,250) ;
+    G_fill_triangle (10,100,  40,100,  60,150) ;
+
+    // circles
+    G_rgb (1.0, 0.5, 0.0) ; // orange
+    G_circle (100, 300, 75) ;
+    G_fill_circle (370, 200, 50) ;
+
+    // polygons
+    G_rgb (0.0, 0.0, 0.0) ; // black
+    x[0] = 100 ;   y[0] = 100 ;
+    x[1] = 100 ;   y[1] = 300 ;
+    x[2] = 300 ;   y[2] = 300 ;
+    x[3] = 300 ;   y[3] = 100 ;
+    x[4] = 200 ;   y[4] = 175 ;
+    numxy = 5 ;
+    G_polygon (x,y,numxy) ;
+
+    G_rgb (0.4, 0.2, 0.1) ; // brown
+    a[0] = 300 ;   b[0] = 400 ;
+    a[1] = 350 ;   b[1] = 450 ;
+    a[2] = 275 ;   b[2] = 500 ;
+    a[3] = 125 ;   b[3] = 400 ;
+    numab = 4 ;
+    G_fill_polygon (a,b,numab) ;
+
+    //===============================================
+
+    double p[2], q[2] ;
+
+    G_rgb(1,0,0) ;
+    G_wait_click(p) ;
+    G_fill_circle(p[0],p[1],2) ;
+    G_wait_click(q) ;
+    G_fill_circle(q[0],q[1],2) ;
+    G_rgb(0,1,0.5) ;
+    G_line(p[0],p[1], q[0],q[1]) ;
+
+    int key ;
+    key =  G_wait_key() ; // pause so user can see results
+
+    G_save_image_to_file("demo.xwd") ;
+}
+
+/* Draw Window for Graphing
+ * Create the Window to draw natural cubic splines
+ */
+void draw_window()
+{
+    // Draw the window
+    G_init_graphics(800, 600);
+    G_rgb(0.3,0.3,0.3);
+    G_clear();
+    G_rgb(1,1,0);
+}
+
+/* Save the User's Clicks
+ * Save each one of the users clicks as an x, y coordinate
+ * that are the knots that join the cubic splines
+ */
+void *save_user_clicks(int n, double *x, double *y)
+{
+    double point[2];
 
     // Fill the data points array with user clicks
-    for(int i = 0; i < size; ++i)
+    for(int i = 0; i < n; ++i)
     {
         // Wait for the user to click
-        G_wait_click(tmp);
+        G_wait_click(point);
 
         // What is this doing?
-        G_fill_circle(tmp[0], tmp[1], 2);
+        G_fill_circle(point[0], point[1], 2);
 
         // Convert double[2] to Point typedef
-        data[i].x = tmp[0];
-        data[i].y = tmp[1];
+        x[i] = point[0];
+        y[i] = point[1];
     }
 }
 
+/* Draw the Natrual cubic splines
+ * Plot the cubic splines respresented by the tridiagonal Matrix
+ */
+void *plot(Spline *s)
+{}
+
+/* Main Menu
+ * TODO: Figure out a way to make menus testable.
+ */
 int main()
 {
-    int m;
-
-    printf("Enter the no. of data-points:\n");
-    scanf("%d", &m);
-
-    int n = m - 1;  //Now (n+1) is the total no. of data-points, following our convention
-    double x[n + 1]; //array to store the x-axis points
-    double y[n + 1]; //array to store the y-axis points
-
-    printf("Enter the x-axis values:\n");
-    int i;
-    for (i = 0; i < n + 1; i++)
+    while (1)
     {
-        scanf("%lf", &x[i]);
-    }
+        printf("\n\n");
+        printf("\tNatural Cubic Splines Graphing Tool\n");
+        printf("\t----------------------------------------------------\n\n");
+        printf("\tEnter 'g' to Run Graphics Test (FP Toolkit)\n");
+        printf("\tEnter 'f' to Load Data Points from a File\n");
+        printf("\tEnter 'q' to Quit\n\n");
+        printf("\tOr enter the number of points to create splines from: ");
 
-    printf("Enter the y-axis values:\n");
-    for (i = 0; i < n + 1; i++)
-    {
-        scanf("%lf", &y[i]);
-    }
+        char menu[100];
+        scanf("%s", menu);
 
-    // array to store the successive interval widths
-    double h[n];
-    for (i = 0; i < n; i++)
-    {
-        h[i] = x[i + 1] - x[i];
-    }
+        char *ptr;
+        int n = strtol(menu, &ptr, 10);
+        printf("\n");
 
-    // Matrix to store the tridiagonal system of equations that will solve for Si's
-    double tri[n - 1][n];
-    // to initialize tri[n-1][n]
-    tridiagonalCubicSplineGen(n, h, tri, y);
-    printf("The tridiagonal system for the Natural spline is:\n\n");
-    printMatrix(n - 1, n, tri);
+        double x[M];
+        double y[M];
 
-    // Perform Gauss Elimination
-    double sig[n + 1]; //array to store Si's
-    double sigTemp[n - 1]; //array to store the Si's except S0 and Sn
-    sig[0] = 0;
-    sig[n] = 0;
+        if (n > 0 && n < 101)
+        {
+            draw_window();
 
-    gaussEliminationLS(n - 1, n, tri, sigTemp);
-    for (i = 1; i < n ;i++)
-    {
-        sig[i] = sigTemp[i - 1];
-    }
+            Spline *s = new();
+            s->Load = save_user_clicks;
+            s->Draw = plot;
 
-    //Print the values of Si's
-    for (i = 0;i < n + 1; i++)
-    {
-        printf("\nSig[%d] = %lf\n", i, sig[i]);
-    }
+            s->Load(s);
+            s->Calculate(s);
+            s->Print(s);
+            s->Draw(s);
+            s->Destroy(s);
 
-    // Calculate the values of ai's, bi's, ci's, and di's
-    double a[n]; //array to store the ai's
-    double b[n]; //array to store the bi's
-    double c[n]; //array to store the ci's
-    double d[n]; //array to store the di's
-    cSCoeffCalc(n, h, sig, y, a, b, c, d);
+            G_wait_key();
+            G_close();
 
-    printf("The equations of cubic interpolation polynomials between the successive intervals are:\n\n");
-    for (i = 0; i < n; i++)
-    {
-        printf("P%d(x) b/w [%lf,%lf] = %lf*(x-%lf)^3+%lf*(x-%lf)^2+%lf*(x-%lf)+%lf\n",
-               i, x[i], x[i + 1], a[i], x[i], b[i], x[i], c[i], x[i], d[i]);
+        }
+        else if (strlen(menu) == 1)
+        {
+            char choice = toupper(menu[0]);
+            int *n_ptr = malloc(sizeof(int));
+
+            switch (choice)
+            {
+                //case 'g':
+                case 'G':
+                    // Environment Test
+                    test_fpitoolkit_graphics();
+                    break;
+                case 'F':
+
+                    draw_window();
+
+                    Spline *s = new();
+                    s->Draw = plot;
+
+                    s->Load(s);
+                    s->Calculate(s);
+                    s->Print(s);
+                    s->Draw(s);
+                    s->Destroy(s);
+
+                    G_wait_key();
+                    G_close();
+
+                    break;
+                case 'Q':
+                    printf("\n\n");
+                    return 0;
+                default:
+                    printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
+            }
+        }
+        else
+        {
+            printf("\n\n'%s' is not a valid menu selection.\n\n", menu);
+        }
+
     }
 }

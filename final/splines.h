@@ -1,85 +1,248 @@
-/* Least Sqauares Polynomial Regression Library
+/* Natural Splines Interpolation Library
  * Steve Braich
  * CS 551
  *
  * References:
- *   - https://en.wikipedia.org/wiki/Least_squares
- *   - https://en.wikipedia.org/wiki/Polynomial_least_squares
- *   - https://www.wikiwand.com/en/Linear_least_squares#/Example
+ *   - https://en.wikipedia.org/wiki/Spline_interpolation
+ *   - https://en.wikipedia.org/wiki/Spline_(mathematics)
  */
 
-#ifndef FPTOOLKIT_LEASTSQUARES_H
-#define FPTOOLKIT_LEASTSQUARES_H
+#ifndef SPLINES_H
+#define SPLINES_H
 
-typedef struct point
+#define M 100
+
+typedef struct spline
 {
-    int x;
-    int y;
-} Point;
+    int n;
+    double *x;
+    double *y;
 
-Point Q01234(Point *pts, double t)
+    double *D;
+    double *R;
+    double *L;
+    double *Q;
+    double *X;
+
+    // member methods
+    //void (*new)(struct Spline *);
+    //void (*spline)(*spline);
+
+    // Load is set to read from a file by default
+    // This can be overridden by the client main function (user clicks)
+    void (*Load) ();
+    void (*Calculate) ();
+    void (*Print)(const struct spline*);
+
+    // Draw is virtual.  It must be defined in the client
+    void (*Draw) ();
+
+    // Deconstructor
+    void (*Destroy)();
+
+
+} Spline;
+
+double *fill_D(int n, double *x)
 {
-    Point p = { 0, 0};
+    double d[M];
+    d[0] = 1;
+    //d[diagonal_length - 1] = 2 * (x[n - 1] - x[n - 2]);
 
-    double a = (1 - 3*t + 3*pow(t, 2) -   pow(t, 3)) / 6;
-    double b = (4 -       6*pow(t, 2) + 3*pow(t, 3)) / 6;
-    double c = (1 + 3*t + 3*pow(t, 2) - 3*pow(t, 3)) / 6;
-    double d = (                          pow(t, 3)) / 6;
+    int i;
+//    for (i = 1; i < diagonal - 1; ++i)
+//    {
+//        /// ...
+//    }
 
-    // From b_splines.txt from Professory Ely
-    // x(t) = a(t)*x0 + b(t)*x1 + c(t)*x2 + d(t)*x3
-    // y(t) = a(t)*y0 + b(t)*y1 + c(t)*y2 + d(t)*y3
-
-    p.x = a*pts[0].x + b*pts[1].x + c*pts[2].x + d*pts[3].x;
-    p.y = a*pts[0].y + b*pts[1].y + c*pts[2].y + d*pts[3].y;
-
-    return p;
+    return d;
 }
 
-/********************
-Cubic Spline coefficients calculator
-Function that calculates the values of ai, bi, ci, and di's for the cubic splines:
-ai(x-xi)^3+bi(x-xi)^2+ci(x-xi)+di
-********************/
-void cSCoeffCalc(int n, double h[n], double sig[n+1], double y[n+1], double a[n], double b[n], double c[n], double d[n])
+double *fill_R(int n, double *x)
 {
+    double r[M]; // diagonal length
+    r[0] = 1;
+    //d[diagonal_length - 1] = 2 * (x[n - 1] - x[n - 2]);
+
     int i;
-    for (i = 0; i < n; i++)
+//    for (i = 1; i < diagonal - 1; ++i)
+//    {
+//        /// ...
+//    }
+
+    return r;
+}
+
+double *fill_L(int n,double *x)
+{
+    double L[M]; // diagonal length
+    L[0] = 1;
+    //d[diagonal_length - 1] = 2 * (x[n - 1] - x[n - 2]);
+
+    int i;
+//    for (i = 1; i < diagonal - 1; ++i)
+//    {
+//        /// ...
+//    }
+
+    return L;
+}
+
+double *fill_Q(int n,double *x)
+{
+    double Q[M];
+    Q[0] = 1;
+
+    int i;
+//    for (i = 1; i < diagonal - 1; ++i)
+//    {
+//        /// ...
+//    }
+
+    return Q;
+}
+
+double **fill_M()
+{}
+
+double *fill_X()
+{}
+
+/* Read File as Data Points
+ * Read data from the file into n (number of points) and the x and y arrays
+ */
+void *read_file(Spline *s)
+{
+    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final.v2/spline_test_data_2", "r");
+    FILE *f = fopen("/home/steve/workspace_psu/cs551/final.v2/final_test_1_input", "r");
+
+    if (f == NULL)
     {
-        a[i] = (sig[i + 1] - sig[i]) / (h[i] * 6.0);
-        b[i] = sig[i] / 2.0;
-        c[i] = (y[i + 1] - y[i]) / h[i] - h[i] * (2 * sig[i] + sig[i + 1]) / 6.0;
-        d[i] = y[i];
+        printf("File I/O Error");
+        exit(0);
     }
+
+    fscanf(f, "%d", &s->n);
+
+    for (int i = 0; i < s->n; i++)
+    {
+        fscanf(f, "%lf %lf\n", &s->x[i], &s->y[i]);
+        //G_fill_rectangle(x[i] - 2.0, y[i] - 2.0, 5.0, 5.0);
+    }
+
+    fclose(f);
+
+    printf("\tLog - tread_file: Splines successfully read from file...\n");
 }
 
-/********************
-Function to generate the tridiagonal augmented matrix
-for cubic spline for equidistant data-points
-Parameters:
-n: no. of data-points
-h: array storing the succesive interval widths
-a: matrix that will hold the generated augmented matrix
-y: array containing the y-axis data-points
-********************/
-void tridiagonalCubicSplineGen(int n, double h[n], double a[n-1][n], double y[n+1]){
+/* Calculate Natural Splines
+ * Process the calculations for loading the tridiagonal matrix
+ */
+void *calculate(Spline *s)
+{
+    int n;
+    double *x;
+    double *y;
+
     int i;
-    for(i=0;i<n-1;i++){
-        a[i][i]=2*(h[i]+h[i+1]);
+    //int s;
+    char q;
+    double p[2];
+    double u;
+    double v;
+
+    int diagonal = 2 * (n - 1);
+
+    double *D = fill_D(n, x);
+    double *R = fill_R(n, x);
+    double *L = fill_R(n, x);
+    double *Q = fill_Q(n, x);
+
+    //print_tridiagonal(n, L, D, R, Q);
+
+    double **tri_matrix = fill_M();
+
+    // do gaussian elimination
+
+    // draw cubic
+    for (i = 1; i <= n; ++i)
+    {
+
+
+        //G_wait_key();
     }
-    for(i=0;i<n-2;i++){
-        a[i][i+1]=h[i+1];
-        a[i+1][i]=h[i+1];
-    }
-    for(i=1;i<n;i++){
-        a[i-1][n-1]=(y[i+1]-y[i])*6/(double)h[i]-(y[i]-y[i-1])*6/(double)h[i-1];
-    }
+
+    //G_wait_key();
+
+    printf("\tLog - calculate: Splines successfully calculated...\n");
 }
 
+/* Print Tridiagonal Matrix
+ * Print out the matrix in tridiagonal form specified by Dr. Ely
+ */
+void *print(Spline *s)
+{
 
+    printf("\tLog - tprint: Splines successfully printed...\n");
+}
 
+/* Deconstructor
+ * Free up any memory used by spline
+ */
+void *destroy(Spline *s)
+{
 
-#endif //FPTOOLKIT_LEASTSQUARES_H
+    //free(s->D);
+
+    realloc(s->x, 0);
+    realloc(s->y, 0);
+
+    realloc(s->D, 0);
+    realloc(s->R, 0);
+    realloc(s->L, 0);
+    realloc(s->Q, 0);
+
+    realloc(s->X, 0);
+
+    realloc(s, 0);
+
+    printf("\tLog - destroy: Splines successfully deallocated...\n");
+}
+
+/* Constructor for spline object
+ * Allocate memory for spline object and intialize values
+ */
+Spline *new()
+{
+    Spline *s = (Spline*)malloc(sizeof(Spline));
+
+    s->n = 0;
+    s->x = (double*)malloc(M*sizeof(double));
+    s->y = (double*)malloc(M*sizeof(double));
+
+    s->D = (double*)malloc(M*sizeof(double));
+    s->L = (double*)malloc(M*sizeof(double));
+    s->R = (double*)malloc(M*sizeof(double));
+    s->Q = (double*)malloc(M*sizeof(double));
+
+    s->X = (double*)malloc(M*sizeof(double));
+
+    // Load is set to read from a file by default
+    // This can be overridden by the client main function (user clicks)
+    s->Load = read_file;
+    s->Calculate = calculate;
+    s->Print = print;
+
+    // Draw is virtual.  It must be defined in the client
+    //s->Draw = draw;
+    s->Destroy = destroy;
+
+    printf("\tLog - new: Splines successfully allocated...\n");
+
+    return s;
+}
+
+#endif //SPLINES_H
 
 
 

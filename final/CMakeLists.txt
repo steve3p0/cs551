@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.10)
 project(splines C)
 
-set(CMAKE_C_STANDARD 99)
-#set(CMAKE_C_STANDARD 11)
+#set(CMAKE_C_STANDARD 99)
+set(CMAKE_C_STANDARD 11)
 set(CMAKE_C_FLAGS "-lm -lX11")
 set(SOURCE_FILES FPToolkit.h gauss_elimS.h splines.c splines.h splinesTests.h)
 add_executable(splines ${SOURCE_FILES})
