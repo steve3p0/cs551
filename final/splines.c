@@ -233,7 +233,7 @@ int main()
 
             s->Load(s);
             s->Calculate(s);
-            s->Print(s);
+            //s->Print(s);
             s->Draw(s);
             s->Destroy(s);
 
@@ -267,7 +267,7 @@ int main()
 
                     s->Load(s);
                     s->Calculate(s);
-                    s->Print(s);
+                    //s->Print(s);
                     s->Draw(s);
                     s->Destroy(s);
 
