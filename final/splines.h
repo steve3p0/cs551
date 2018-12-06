@@ -10,6 +10,8 @@
 #ifndef SPLINES_H
 #define SPLINES_H
 
+#include "gauss_elimS.h"
+
 #define M 100
 
 typedef struct spline
@@ -26,6 +28,8 @@ typedef struct spline
     double *Q;  // Q Vector
 
     double **tridiagonal;
+
+    double *X;
 
     double *A;  // A Coefficients
     double *B;  // B Coefficients
@@ -127,6 +131,8 @@ void init(Spline *s)
     s->tridiagonal = (double **)malloc(M * sizeof(double *));
     for (int i = 0; i < M; i++)
         s->tridiagonal[i] = (double *)malloc((M + 1) * sizeof(double));
+
+    s->X = (double*)malloc(M*sizeof(double));
 }
 
 /* Read File as Data Points
@@ -183,6 +189,8 @@ void *calculate(Spline *s)
     s->Print(s);
 
     // do gaussian elimination
+    gaussian_elimination(s->tridiagonal, s->n, s->X);
+    print_matrix(s->X, s->n);
 
     // draw cubic
     for (int i = 1; i <= s->n; i++)
@@ -214,6 +222,8 @@ void print(Spline *s)
         }
         printf("\n");
     }
+
+    printf("\tLog - print: Splines successfully printed...\n");
 }
 
 /* Deconstructor
