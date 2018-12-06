@@ -15,14 +15,24 @@
 #include <stdbool.h>
 #include "splines.h"
 
+/* Using a data structure to hold each x, y
+ * coordinate that the polynomial passes thru
+ */
+typedef struct point
+{
+    double x;
+    double y;
+} Point;
+
 /* TestInput: Created this typedef to make it to create tests
  * You can create the input statically pretty easy
  */
 typedef struct test_input
 {
-    int n;
-    Point data[100];
-    int degree;
+    double expectedArray[100];
+    int index;
+    double initial;
+    double *diagona;
 } TestInput;
 
 /* Used to evaluate eequality of double (floating point numbers)
@@ -34,12 +44,26 @@ bool Equality(double a, double b, double epsilon)
     return false;
 }
 
+bool CompareArrays(int n, double *a, double *b)
+{
+    for (int i = 0; i < n; i++)
+    {
+        if (!Equality(a[i], b[i], 0.01))
+        {
+            return false;
+        }
+    }
+}
+
 /* This function will run whatever function passed into it
  * Also, the input and expected values are passed in as well.
  */
-int run_test(char *test_name, find_eq_linear f, TestInput *input, double expectA, double expectB)
+int run_test(char *test_name, Spline *s, double *expect)
 {
-    f(input->n, input->data);
+
+
+    double array[100];
+    array = load_diagonals(s, 1, 1, array);
 
     bool expectA_pass = Equality(A, expectA, 0.01);
     bool expectB_pass = Equality(B, expectB, 0.01);
@@ -81,9 +105,9 @@ int run_test(char *test_name, find_eq_linear f, TestInput *input, double expectA
 /* Least Squares Tests
  * TODO: Add more edge casees
  */
-int test_least_squares()
+int test_splines()
 {
-    printf("\nRunning Least Squares Tests...\n\n");
+    printf("\nRunning Splines Tests...\n\n");
 
     // Integration Tests
     int count = 0;
@@ -95,15 +119,22 @@ int test_least_squares()
     // I have to create multiple instances of them.  I free up the memory
     // for each one in function 'run_test'
     count++;
-    TestInput input_wiki_ex1 = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}, 1};
-    input_ptr = &input_wiki_ex1;
-    pass += run_test("test_least_squares_wikipedia_example", &find_equation_linear, input_ptr, 1.4, 3.5);
+    Spline *s = new();
+    s->n = 6;
+    s->d = 10;
+    double x[s->n] = { 177.00, 249.00, 311.00, 381.00, 416.00, 455.00 };
+    double y[s->n] = { 211.00, 315.00, 460, 469, 311, 195};
+    double d[s->d] = { 1.0, 5184.0, -134, 3844, -132, 4900, -105, 1225, -74, 89 };
+    s->x = x;
+    s->y = y;
+    s->D = d;
+    pass += run_test("test_least_squares_wikipedia_example", s);
 
-    count++;
-    TestInput input_wiki_ex2 = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}, 1};
-    input_ptr = &input_wiki_ex2;
-    pass += run_test("test_least_squares_wikipedia_example", &find_equation_quad, input_ptr, 1.4, 3.5);
-
+//    count++;
+//    TestInput input_wiki_ex2 = { 4, {{1, 6}, {2, 5}, {3, 7}, {4, 10}}, 1};
+//    input_ptr = &input_wiki_ex2;
+//    pass += run_test("test_least_squares_wikipedia_example", &find_equation_quad, input_ptr, 1.4, 3.5);
+//
 
 //    count++;
 //    TestInput input_ones = { 1, {{1, 1}}, 1};

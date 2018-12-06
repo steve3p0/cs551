@@ -72,6 +72,7 @@
 #include <ctype.h>
 #include "FPToolkit.h"
 #include "splines.h"
+//#include "splinesTests.h"
 
 /* Test FPI Toolkit Graphics
  * This function graphs serveral objects using Xll.
@@ -207,6 +208,7 @@ int main()
         printf("\tNatural Cubic Splines Graphing Tool\n");
         printf("\t----------------------------------------------------\n\n");
         printf("\tEnter 'g' to Run Graphics Test (FP Toolkit)\n");
+        printf("\tEnter 't' to Run Automated Tests\n");
         printf("\tEnter 'f' to Load Data Points from a File\n");
         printf("\tEnter 'q' to Quit\n\n");
         printf("\tOr enter the number of points to create splines from: ");
@@ -250,6 +252,11 @@ int main()
                 case 'G':
                     // Environment Test
                     test_fpitoolkit_graphics();
+                    break;
+                case 'T':
+                    // Run tests
+                    //test_splines();
+                    //test_newton();
                     break;
                 case 'F':
 
