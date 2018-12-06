@@ -122,11 +122,13 @@ void load_D(Spline *s)
 
     for (i = 0, j = 0; i < s->d - 1; i += 2, j++)
     {
-        s->D[i]   = -(s->x[j + 1] - s->x[j - 1]);
-        s->L[i+1] =  (s->x[j + 1] - s->x[j]);
-        s->R[i+1] =   s->x[j + 2] - s->x[j + 1];
+        s->D[i]     = -(s->x[j + 1] - s->x[j - 1]);
+        s->L[i + 1] =   s->x[j + 1] - s->x[j];
+        s->R[i + 1] =   s->x[j + 2] - s->x[j + 1];
 
-        //s->R[i] = s->x[tempN + 1] - s->x[tempN];
+        s->Q[i - 1] = ((s->y[j + 1] - s->y[j])     / (s->x[j + 1] - s->x[j]))
+                    - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
+
         printf("D[%d] = %lf\n", i, s->D[i]);
     }
 
@@ -137,12 +139,13 @@ void load_D(Spline *s)
     // B4 = x43^2 = (x4 - x3)^2
     // B5 = x53^2 = (x5 - x4)^2
     // Start at [1] till length of diagonal, step by 2
-
     for (i = 1, j = 1; i < s->d - 1; i += 2, j++)
     {
         s->D[i]     = pow(s->x[j] - s->x[j - 1], 2);
         s->L[i + 1] = pow(s->x[j] - s->x[j - 1], 2);
         s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
+
+        s->Q[i + 1] = -s->Q[i];
 
         printf("D[%d] = %lf\n", i, s->D[i]);
     }
@@ -162,6 +165,9 @@ void load_D(Spline *s)
 
     // Set the right side of R (for loop doesn't hit last element of R)
     s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
+
+    s->Q[0] = 0;
+    s->Q[s->d - 1] = 0;
 
 }
 
@@ -211,8 +217,8 @@ double load_Q(Spline *s)
     {
         if (i % 2)
         {
-            s->Q[i] = ((s->y[tempN + 1] - s->y[tempN]) / (s->x[tempN + 1] - s->x[tempN]))
-                      - ((s->y[tempN] - s->y[tempN - 1]) / (s->x[tempN] - s->x[tempN - 1]));
+            s->Q[i] = ((s->y[tempN + 1] - s->y[tempN])     / (s->x[tempN + 1] - s->x[tempN]))
+                    - ((s->y[tempN]     - s->y[tempN - 1]) / (s->x[tempN]     - s->x[tempN - 1]));
         }
         else
         {
@@ -285,7 +291,7 @@ void *calculate(Spline *s)
     printf("\n"); for (int i = 0; i < s->d; ++i) printf("L[%d] = %lf\n", i, s->L[i]);
     //load_R(s);
     printf("\n"); for (int i = 0; i < s->d; ++i) printf("R[%d] = %lf\n", i, s->R[i]);
-    load_Q(s);
+    //load_Q(s);
     printf("\n"); for (int i = 0; i < s->d; ++i) printf("R[%d] = %lf\n", i, s->Q[i]);
 
 
@@ -391,7 +397,7 @@ void *destroy(Spline *s)
     realloc(s->y, 0);
 
     realloc(s->D, 0);
-    realloc(s->R, 0);
+    //realloc(s->R, 0);
     realloc(s->L, 0);
     realloc(s->Q, 0);
 
