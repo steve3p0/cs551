@@ -138,8 +138,8 @@ void load_D(Spline *s)
 
     for (i = 1, j = 1; i < s->d - 1; i += 2, j++)
     {
-        s->D[i] =   pow(s->x[j] - s->x[j - 1], 2);
-        s->L[i+1] = pow(s->x[j] - s->x[j - 1], 2);
+        s->D[i]     = pow(s->x[j] - s->x[j - 1], 2);
+        s->L[i + 1] = pow(s->x[j] - s->x[j - 1], 2);
 
         printf("D[%d] = %lf\n", i, s->D[i]);
     }
@@ -148,8 +148,11 @@ void load_D(Spline *s)
     // Set left side of cubic to 1
     s->D[0] = 1;
     // An-1
-    // Set right side of cubic to the derivative of
+    // Set right side of cubic to the derivative
     s->D[s->d - 1] = 2 * (s->x[s->n - 1] - s->x[s->n - 2]);
+
+    // Set right side of cubic to 1
+    s->L[s->d - 1] = 1;
 }
 
 double *load_L(Spline *s)
@@ -169,7 +172,6 @@ double *load_L(Spline *s)
     }
 
 }
-
 
 
 double load_R(Spline *s)
