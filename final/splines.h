@@ -120,9 +120,10 @@ void load_D(Spline *s)
     // Start at [0] till length of diagonal, step by 2
     int i, j;
 
-    for (i = 0, j = 1; i < s->d - 1; i += 2, j++)
+    for (i = 0, j = 0; i < s->d - 1; i += 2, j++)
     {
-        s->D[i] = -(s->x[j] - s->x[j - 2]);
+        s->D[i]   = -(s->x[j + 1] - s->x[j - 1]);
+        s->L[i+1] =  (s->x[j + 1] - s->x[j]);
 
         printf("D[%d] = %lf\n", i, s->D[i]);
     }
@@ -137,8 +138,8 @@ void load_D(Spline *s)
 
     for (i = 1, j = 1; i < s->d - 1; i += 2, j++)
     {
-        //j++;
-        s->D[i] = pow(s->x[j] - s->x[j - 1], 2);
+        s->D[i] =   pow(s->x[j] - s->x[j - 1], 2);
+        s->L[i+1] = pow(s->x[j] - s->x[j - 1], 2);
 
         printf("D[%d] = %lf\n", i, s->D[i]);
     }
@@ -169,35 +170,7 @@ double *load_L(Spline *s)
 
 }
 
-void load_L2(Spline *s)
-{
-    // An-1
-    //  Set left side of cubic to 1
-    s->L[s->d - 1] = 1;
 
-    // A2, A3, A4, A5
-    // A2 = x21 = -(x2 - x1)
-    // A3 = x32 = -(x3 - x2)
-    // A4 = x43 = -(x4 - x3)
-    // A5 = x54 = -(x5 - x4)
-    // Start at [1] till length of diagonal, step by 2
-    for (int i = 0; i < s->d - 1; i += 2)
-    {
-        s->L[i] = pow(s->x[i - 1] - s->x[i - 2], 2);
-    }
-
-    // B1, B2, B3, B4, B5... Bn-1
-    // B1 = x10^2 = (x1 - x0)^2
-    // B2 = x21^2 = (x2 - x1)^2
-    // B3 = x32^2 = (x3 - x2)^2
-    // B4 = x43^2 = (x4 - x3)^2
-    // B5 = x53^2 = (x5 - x4)^2
-    // Start at [1] till length of diagonal, step by 2
-    for (int i = 1; i < s->d - 1; i += 2)
-    {
-        s->L[i] = s->x[i - 1] - s->x[i - 2];
-    }
-}
 
 double load_R(Spline *s)
 {
@@ -297,7 +270,7 @@ void *calculate(Spline *s)
 
     load_D(s);
     printf("\n"); for (int i = 0; i < s->d; i+=2) printf("D[%d] = %lf\n", i, s->D[i]);
-    load_L(s);
+    //load_L(s);
     printf("\n"); for (int i = 0; i < s->d; ++i) printf("L[%d] = %lf\n", i, s->L[i]);
     load_R(s);
     printf("\n"); for (int i = 0; i < s->d; ++i) printf("R[%d] = %lf\n", i, s->R[i]);
