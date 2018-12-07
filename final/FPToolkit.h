@@ -47,6 +47,10 @@
 #include <X11/keysym.h> 
 #include <X11/Xutil.h>// for XComposeStatus
 
+
+#define M_PI 3.14159265358979323846264338327
+
+
 int Set_Color_Rgb_X (int r, int g, int b) ;
 
 
@@ -2347,13 +2351,15 @@ int get_timeI (int *hms)
 {
  int failure ;
  struct timeval Tp, *tp ;
- struct timezone Tzp, *tzp ;
+//struct timezone Tzp, *tzp ;
  time_t  numseconds, *clock ;
  struct tm *x ;
 
  tp = &Tp ;
- tzp = &Tzp ;
- failure = gettimeofday(tp,tzp) ; // 1 for fail, 0 for success
+ //tzp = &Tzp ;
+ //failure = gettimeofday(tp,tzp) ; // 1 for fail, 0 for success
+ failure = gettimeofday(tp,NULL) ; // 1 for fail, 0 for success
+
  numseconds = tp-> tv_sec ;
  clock = &numseconds ;
 
