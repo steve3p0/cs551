@@ -174,6 +174,7 @@ void *read_file(Spline *s)
     if (file == NULL)
     {
         printf("File I/O Error\n");
+        exit(1);
     }
     else
     {
@@ -283,17 +284,18 @@ int main()
 
         if (n > 0 && n < 101)
         {
+            // Draw window BEFORE user clicks
             draw_window();
 
             Spline *s = init();
             s->n = n;
-
+            // Wire up methods
             s->Load = save_user_clicks;
             s->Draw = plot;
 
+            // Let's do it!
             s->Load(s);
-            s->Calculate(s);
-            //s->Print(s);
+            s->Solve(s);
             s->Draw(s);
             s->Destroy(s);
 
@@ -320,16 +322,15 @@ int main()
                 case 'F':
                     ; // <-- labels like case have to precede statements
                     Spline *s = init();
-                    // Load is set to read from a file by default
-                    // This can be overridden by the client main function (user clicks)
+                    // wirte methods
                     s->Load = read_file;
                     s->Draw = plot;
 
+                    // Let's do it!
                     s->Load(s);
+                    // Draw window AFTER loading from file
                     draw_window();
-                    s->Calculate(s);
-                    //s->Print(s);
-
+                    s->Solve(s);
                     s->Draw(s);
                     s->Destroy(s);
 

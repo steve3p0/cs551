@@ -63,7 +63,7 @@ int run_test(char *test_name, Spline *s, double *expect)
 
 
     double array[100];
-    array = load_diagonals(s, 1, 1, array);
+    array = fill_diagonals(s, 1, 1, array);
 
     bool expectA_pass = Equality(A, expectA, 0.01);
     bool expectB_pass = Equality(B, expectB, 0.01);

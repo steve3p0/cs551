@@ -40,7 +40,7 @@ typedef struct spline
     // This can be overridden by the client main function (user clicks)
     void (*Load) ();
     void (*New) ();
-    void (*Calculate) ();
+    void (*Solve) ();
     void (*Print)(const struct spline*);
 
     // Draw is virtual.  It must be defined in the client
@@ -86,6 +86,9 @@ void print_matrix(double m[M][M + 1], int n)
     }
 }
 
+/* Gaussian Elimination
+ * From Dr. Ely for our solver
+ */
 int gaussian_elimination(double m[M][M + 1], int n, double x[M])
 // return 1 for success, 0 for failure
 {
@@ -140,7 +143,7 @@ int gaussian_elimination(double m[M][M + 1], int n, double x[M])
     return 1;
 }
 
-void load_diagonals(Spline *s)
+void fill_diagonals(Spline *s)
 {
     // A2, A3, A4, A5
     // A2 = x21 = -(x2 - x1)
@@ -212,13 +215,12 @@ double C(double *x, double *y, int i, int x_coord, double *A, double *B)
     return y_point;
 }
 
-/* Calculate Natural Splines
+/* Solve Natural Splines
  * Process the calculations for loading the tridiagonal matrix
  */
-void *calculate(Spline *s)
+void *solve(Spline *s)
 {
-    load_diagonals(s);
-
+    fill_diagonals(s);
 
     for (int i = 0; i < s->d; i++)
     {
@@ -241,7 +243,7 @@ void *calculate(Spline *s)
         s->B[j] = s->coefficients[i + 1];
     }
 
-    //printf("\tLog - calculate: Splines successfully calculated...\n");
+    //printf("\tLog - solve: Splines successfully calculated...\n");
 }
 
 
@@ -304,11 +306,12 @@ Spline *init()
 
     s->n = 0;
 
-    s->Calculate = calculate;
+    s->Solve = solve;
     s->Print = print_tridiagonal;
 
-    // Draw is virtual.  It must be defined in the client
-    //s->Draw = draw;
+    // Draw is virtual.  It must be wired up in the client
+    // because the draw method is client specific
+    //s->Draw = ?;
     s->Destroy = destroy;
 
     // Private members
