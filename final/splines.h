@@ -10,9 +10,7 @@
 #ifndef SPLINES_H
 #define SPLINES_H
 
-//#include "gauss_elimS.h"
-
-#define M 20
+#define M 100
 
 typedef struct spline
 {
@@ -55,67 +53,6 @@ typedef struct spline
 
 } Spline;
 
-void load_diagonals(Spline *s)
-{
-    // A2, A3, A4, A5
-    // A2 = x21 = -(x2 - x1)
-    // A3 = x32 = -(x3 - x2)
-    // A4 = x43 = -(x4 - x3)
-    // A5 = x54 = -(x5 - x4)
-    // Start at [0] till length of diagonal, step by 2
-    int i, j;
-
-    for (i = 0, j = 0; i < s->d - 1; i += 2, j++)
-    {
-        s->D[i]     = -(s->x[j + 1] - s->x[j - 1]);
-        s->L[i + 1] =   s->x[j + 1] - s->x[j];
-        s->R[i + 1] =   s->x[j + 2] - s->x[j + 1];
-
-        s->Q[i - 1] = ((s->y[j + 1] - s->y[j])     / (s->x[j + 1] - s->x[j]))
-                    - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
-
-        //printf("D[%d] = %lf\n", i, s->D[i]);
-    }
-
-    // B1, B2, B3, B4, B5... Bn-1
-    // B1 = x10^2 = (x1 - x0)^2
-    // B2 = x21^2 = (x2 - x1)^2
-    // B3 = x32^2 = (x3 - x2)^2
-    // B4 = x43^2 = (x4 - x3)^2
-    // B5 = x53^2 = (x5 - x4)^2
-    // Start at [1] till length of diagonal, step by 2
-    for (i = 1, j = 1; i < s->d - 1; i += 2, j++)
-    {
-        s->D[i]     = pow(s->x[j] - s->x[j - 1], 2);
-        s->L[i + 1] = pow(s->x[j] - s->x[j - 1], 2);
-        s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
-
-        s->Q[i + 1] = -s->Q[i];
-
-        //printf("D[%d] = %lf\n", i, s->D[i]);
-    }
-
-    // A1 = 1
-    // Set left side of D to 1
-    s->D[0] = 1;
-    // An-1
-    // Set right side of D to the derivative
-    s->D[s->d - 1] = 2 * (s->x[s->n - 1] - s->x[s->n - 2]);
-
-    // Set right side of L cubic to 1
-    s->L[s->d - 1] = 1;
-
-    // Set right side to negative of the left side of L
-    s->R[0] = -(s->x[1] - s->x[0]);
-
-    // Set the right side of R (for loop doesn't hit last element of R)
-    s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
-
-    s->Q[0] = 0;
-    s->Q[s->d - 1] = 0;
-
-}
-
 void init(Spline *s)
 {
     s->d = 2 * (s->n - 1);
@@ -128,19 +65,9 @@ void init(Spline *s)
     s->R = (double*)malloc(M*sizeof(double));
     s->Q = (double*)malloc(M*sizeof(double));
 
-
-//    //s->tridiagonal = (double *)malloc(M * M * sizeof(double));
-//    s->tridiagonal = (double **)malloc(M * sizeof(double *));
-//    for (int i = 0; i < M; i++)
-//        s->tridiagonal[i] = (double *)malloc((M + 1) * sizeof(double));
-//
     for (int i = 0; i < s->d + 1; ++i)
-    {
         for (int j = 0; j < s->d; ++j)
-        {
             s->tridiagonal[i][j] = 0;
-        }
-    }
 
     //s->X = (double*)malloc(M*sizeof(double));
 }
@@ -150,8 +77,8 @@ void init(Spline *s)
  */
 void *read_file(Spline *s)
 {
-    FILE *f = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
-    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
+    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
+    FILE *f = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
 
     if (f == NULL)
     {
@@ -166,7 +93,7 @@ void *read_file(Spline *s)
     for (int i = 0; i < s->n; i++)
     {
         fscanf(f, "%lf %lf\n", &s->x[i], &s->y[i]);
-        //G_load_rectangle(x[i] - 2.0, y[i] - 2.0, 5.0, 5.0);
+        //TODO: G_load_rectangle(x[i] - 2.0, y[i] - 2.0, 5.0, 5.0);
     }
 
     fclose(f);
@@ -179,30 +106,17 @@ void *read_file(Spline *s)
  */
 void print_matrix(double m[M][M + 1], int n)
 {
-//    int r, c;
-//
-//    for (r = 0; r < n; r++)
-//    {
-//        for (c = 0; c <= n; c++)
-//        {
-//            printf(" %10.3lf", m[r][c]);
-//        }
-//        printf("\n");
-//
-//    }
-//    printf("\n");
-
     for (int i = 0; i < n; i++)
     {
         for (int j = 0; j < n + 1; j++)
         {
-            printf(" %10.3lf", m[i][j]);
+            printf(" %10.6lf", m[i][j]);
         }
         printf("\n");
     }
 }
 
-int gaussian_elimination1(double m[M][M + 1], int n, double x[M])
+int gaussian_elimination(double m[M][M + 1], int n, double x[M])
 // return 1 for success, 0 for failure
 {
     int i, j, k;
@@ -256,80 +170,65 @@ int gaussian_elimination1(double m[M][M + 1], int n, double x[M])
     return 1;
 }
 
-int gaussian_elimination(double m[M][M + 1], int n, double x[M])
+void load_diagonals(Spline *s)
 {
-    int i, j, k;
-    double v, sum;
-    int max_row, c;
+    // A2, A3, A4, A5
+    // A2 = x21 = -(x2 - x1)
+    // A3 = x32 = -(x3 - x2)
+    // A4 = x43 = -(x4 - x3)
+    // A5 = x54 = -(x5 - x4)
+    // Start at [0] till length of diagonal, step by 2
+    int i, j;
 
-    // reduce matrix to upper triangular form
-
-    for (j = 0; j < n - 1; j++)
+    for (i = 0, j = 0; i < s->d - 1; i += 2, j++)
     {
-        // search from row j+1 down to find the largest magnitude
-        max_row = j;
-        for (k = j + 1; k < n; k++)
-        {
-            if (fabs(m[k][j]) > fabs(m[max_row][j]))
-            { max_row = k; }
-        }
-        if (max_row != j)
-        {
-            // swap rows
-            for (c = j; c <= n; c++)
-            {
-                v = m[j][c];
-                m[j][c] = m[max_row][c];
-                m[max_row][c] = v;
-            }
-        }
+        s->D[i]     = -(s->x[j + 1] - s->x[j - 1]);
+        s->L[i + 1] =   s->x[j + 1] - s->x[j];
+        s->R[i + 1] =   s->x[j + 2] - s->x[j + 1];
 
-        if (m[j][j] == 0)
-        { return 0; }
+        s->Q[i - 1] = ((s->y[j + 1] - s->y[j])     / (s->x[j + 1] - s->x[j]))
+                      - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
 
-        for (k = j + 1; k < n; k++)
-        {
-
-            v = m[k][j] / m[j][j];
-            for (i = 0; i <= n; i++)
-            {
-                m[k][i] = m[k][i] - v * m[j][i];
-            }
-
-        }
-
-
+        //printf("D[%d] = %lf\n", i, s->D[i]);
     }
 
-////////////////////////////////////////////
-
-    // Now do the back substitution
-    for (j = n - 1; j >= 0; j--)
+    // B1, B2, B3, B4, B5... Bn-1
+    // B1 = x10^2 = (x1 - x0)^2
+    // B2 = x21^2 = (x2 - x1)^2
+    // B3 = x32^2 = (x3 - x2)^2
+    // B4 = x43^2 = (x4 - x3)^2
+    // B5 = x53^2 = (x5 - x4)^2
+    // Start at [1] till length of diagonal, step by 2
+    for (i = 1, j = 1; i < s->d - 1; i += 2, j++)
     {
+        s->D[i]     = pow(s->x[j] - s->x[j - 1], 2);
+        s->L[i + 1] = pow(s->x[j] - s->x[j - 1], 2);
+        s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
 
-        sum = 0.0;
-        for (k = j + 1; k < n; k++)
-        {
-            sum += (m[j][k] * x[k]);
-        }
+        s->Q[i + 1] = -s->Q[i];
 
-        if (m[j][j] == 0)
-        { return 0; }
-
-        x[j] = (m[j][n] - sum) / m[j][j];
+        //printf("D[%d] = %lf\n", i, s->D[i]);
     }
 
-    /*
-    for (j = 0 ; j < n ; j++) {
-      printf("x[%d] = %.16lf\n",j,x[j]) ;
-    }
-    printf("\n") ;
-    */
+    // A1 = 1
+    // Set left side of D to 1
+    s->D[0] = 1;
+    // An-1
+    // Set right side of D to the derivative
+    s->D[s->d - 1] = 2 * (s->x[s->n - 1] - s->x[s->n - 2]);
 
-    return 1;
+    // Set right side of L cubic to 1
+    s->L[s->d - 1] = 1;
+
+    // Set right side to negative of the left side of L
+    s->R[0] = -(s->x[1] - s->x[0]);
+
+    // Set the right side of R (for loop doesn't hit last element of R)
+    s->R[i - 1] = (s->x[j - 1] - s->x[j - 2]) * (s->x[j] - s->x[j - 1]);
+
+    s->Q[0] = 0;
+    s->Q[s->d - 1] = 0;
 }
-
-
 
 /* Calculate Natural Splines
  * Process the calculations for loading the tridiagonal matrix
@@ -340,10 +239,10 @@ void *calculate(Spline *s)
 
     load_diagonals(s);
 
-    printf("\n"); for (int i = 0; i < s->d; i++) printf("D[%d] = %lf\n", i, s->D[i]);
-    printf("\n"); for (int i = 0; i < s->d; i++) printf("L[%d] = %lf\n", i, s->L[i]);
-    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->R[i]);
-    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->Q[i]);
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("D[%d] = %lf\n", i, s->D[i]);
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("L[%d] = %lf\n", i, s->L[i]);
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->R[i]);
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->Q[i]);
 
     for (int i = 0; i < s->d; i++)
     {
@@ -359,59 +258,84 @@ void *calculate(Spline *s)
     //print_matrix(s->tridiagonal, M);
     print_matrix(s->tridiagonal, s->d);
 
-//    for (int i = 0; i < s->d; i++)
-//    {
-//        s->tridiagonal[i][i]     = s->D[i + 1];
-//        s->tridiagonal[i][i + 1] = s->R[i + 1];
-//        s->tridiagonal[i + 1][i] = s->L[i + 2];
-//        s->tridiagonal[i][s->d]  = s->Q[i + 1];
-//    }
-
-    // Looks like gauss - elimnation.
-//    for (int i = 0; i < s->d; i++)
-//    {
-//        s->tridiagonal[i][i + 1] = s->D[i + 1];
-//        s->tridiagonal[i][i]     = s->L[i + 1];
-//        s->tridiagonal[i][i + 2] = s->R[i + 1];
-//        s->tridiagonal[i][s->d]  = s->Q[i];
-//    }
-
-//    for (int i = 0; i < s->d - 1; i++)
-//    {
-//        s->tridiagonal[i][i + 1] = s->R[i + 1];
-//        s->tridiagonal[i + 1][i] = s->L[i + 2];
-//    }
-
-//    // Load L and R into Matrix
-//    for (int i = 0; i < s->d - 1; ++i)
-//    {
-//        s->tridiagonal[i][i + 1] = s->R[i];
-//        s->tridiagonal[i + 1][i] = s->L[i + 1];
-//    }
-//
-//    // Load Q into the matrix
-//    for (int i = 0; i < s->d; ++i)
-//    {
-//        s->tridiagonal[i][s->d] = s->Q[i];
-//    }
-
     // do gaussian elimination
     gaussian_elimination(s->tridiagonal, s->d, s->X);
+
     printf("DEBUG: print X matrix.... GAUSSIAN ELIMINATION\n");
     print_matrix(s->X, s->d);
 
-    // draw!!!
-    for (int i = 1; i <= s->n; i++)
+//    int tA = 0;
+//    int tB = 0;
+//    double A[999], B[999];
+//    for (int i = 0; i < s->d; i++)
+//    {
+//        if (i % 2)
+//        {
+//            B[tB] = s->X[i];
+//            ++tB;
+//        }
+//        else
+//        {
+//            A[tA] = s->X[i];
+//            ++tA;
+//        }
+//    }
+
+    int i;
+    int j;
+    double A[10], B[10];
+    for (i = 0, j = 0; i < s->d; i += 2, j++)
     {
-
-
-        //G_wait_key();
+        A[j] = s->X[i];
+        B[j] = s->X[i + 1];
     }
 
-    //G_wait_key();
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("A[%d] = %lf\n", i, A[i]);
+//    printf("\n"); for (int i = 0; i < s->d; i++) printf("B[%d] = %lf\n", i, B[i]);
+
+    double yVal = 0;
+    for (int i = 0; i < s->n; i++)
+    {
+        for (int j = s->x[i]; j < s->x[i + 1]; j++)
+        {
+            yVal = s->y[i] + ((s->y[i + 1] - s->y[i]) / (s->x[i + 1] - s->x[i])) * (j - s->x[i])
+                   + A[i] *    (j - s->x[i])    * (j - s->x[i + 1])
+                   + B[i] * pow(j - s->x[i], 2) * (j - s->x[i + 1]);
+            G_point(j, yVal);
+        }
+    }
+
+//    double yVal = 0;
+//    for (int i = 1; i <= s->n; ++i)
+//    {
+//        for (int j = s->x[i - 1]; j < s->x[i]; ++j)
+//        {
+//            yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
+//                   + A[i - 1] *    (j - s->x[i - 1])    * (j - s->x[i])
+//                   + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
+//            G_point(j, yVal);
+//        }
+//    }
+
+    G_wait_key();
 
     printf("\tLog - calculate: Splines successfully calculated...\n");
 }
+
+//double C(double )
+//{
+//
+//    yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
+//           + A[i - 1] * (j - s->x[i - 1]) * (j - s->x[i])
+//           + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
+//
+//    yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
+//           + A[i - 1] * (j - s->x[i - 1]) * (j - s->x[i])
+//           + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
+//
+//    return 0;
+//}
+
 
 /* Print Tridiagonal Matrix
  * Print the matrix in the format specified by Dr. Ely
