@@ -10,6 +10,8 @@
 #ifndef SPLINES_H
 #define SPLINES_H
 
+#include <unistd.h>
+
 #define M 100
 
 typedef struct spline
@@ -28,15 +30,11 @@ typedef struct spline
     //double **tridiagonal;
     double tridiagonal[M][M + 1];
 
-    //double *X;
-    double X[M];
+    //double *coefficients;
+    double coefficients[M];
 
     double *A;  // A Coefficients
     double *B;  // B Coefficients
-
-    // member methods
-    //void (*new)(struct Spline *);
-    //void (*spline)(*spline);
 
     // Load is set to read from a file by default
     // This can be overridden by the client main function (user clicks)
@@ -69,7 +67,8 @@ void init(Spline *s)
         for (int j = 0; j < s->d; ++j)
             s->tridiagonal[i][j] = 0;
 
-    //s->X = (double*)malloc(M*sizeof(double));
+    s->A = (double*)malloc(M*sizeof(double));
+    s->B = (double*)malloc(M*sizeof(double));
 }
 
 /* Read File as Data Points
@@ -77,8 +76,20 @@ void init(Spline *s)
  */
 void *read_file(Spline *s)
 {
+    // Get current working directory
+    char cwd[100];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
+        printf("Current working dir: %s\n", cwd);
+    }
+
+    printf("Enter in a filename: ");
+    char filename[100];
+    scanf("%s", filename);
+
+    FILE *f = fopen(filename, "r");
     //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
-    FILE *f = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
+    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
 
     if (f == NULL)
     {
@@ -187,7 +198,7 @@ void load_diagonals(Spline *s)
         s->R[i + 1] =   s->x[j + 2] - s->x[j + 1];
 
         s->Q[i - 1] = ((s->y[j + 1] - s->y[j])     / (s->x[j + 1] - s->x[j]))
-                      - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
+                    - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
 
         //printf("D[%d] = %lf\n", i, s->D[i]);
     }
@@ -230,19 +241,25 @@ void load_diagonals(Spline *s)
     s->Q[s->d - 1] = 0;
 }
 
+/* C1(x) = a0 + a1x^2 + a2x^3
+ * from 2nd page of Final Project Assignement
+ */
+double C(double *x, double *y, int i, int x_coord, double *A, double *B)
+{
+    double y_point =  y[i] + ((y[i + 1] - y[i]) / (x[i + 1] - x[i])) * (x_coord - x[i])
+                      + A[i] *    (x_coord - x[i])    * (x_coord - x[i + 1])
+                      + B[i] * pow(x_coord - x[i], 2) * (x_coord - x[i + 1]);
+
+    return y_point;
+}
+
 /* Calculate Natural Splines
  * Process the calculations for loading the tridiagonal matrix
  */
 void *calculate(Spline *s)
 {
-    for (int i = 0; i < s->n; ++i) printf("point %d\tx: %lf\ty: %lf\n", i + 1, s->x[i], s->y[i]);
-
     load_diagonals(s);
 
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("D[%d] = %lf\n", i, s->D[i]);
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("L[%d] = %lf\n", i, s->L[i]);
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->R[i]);
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("R[%d] = %lf\n", i, s->Q[i]);
 
     for (int i = 0; i < s->d; i++)
     {
@@ -254,87 +271,35 @@ void *calculate(Spline *s)
 
     s->Print(s);
 
-    printf("DEBUG: print tridiagonal matrix.... LET'S TAKE A LOOKN\n");
-    //print_matrix(s->tridiagonal, M);
-    print_matrix(s->tridiagonal, s->d);
-
     // do gaussian elimination
-    gaussian_elimination(s->tridiagonal, s->d, s->X);
-
-    printf("DEBUG: print X matrix.... GAUSSIAN ELIMINATION\n");
-    print_matrix(s->X, s->d);
-
-//    int tA = 0;
-//    int tB = 0;
-//    double A[999], B[999];
-//    for (int i = 0; i < s->d; i++)
-//    {
-//        if (i % 2)
-//        {
-//            B[tB] = s->X[i];
-//            ++tB;
-//        }
-//        else
-//        {
-//            A[tA] = s->X[i];
-//            ++tA;
-//        }
-//    }
+    gaussian_elimination(s->tridiagonal, s->d, s->coefficients);
 
     int i;
     int j;
-    double A[10], B[10];
     for (i = 0, j = 0; i < s->d; i += 2, j++)
     {
-        A[j] = s->X[i];
-        B[j] = s->X[i + 1];
+        s->A[j] = s->coefficients[i];
+        s->B[j] = s->coefficients[i + 1];
     }
 
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("A[%d] = %lf\n", i, A[i]);
-//    printf("\n"); for (int i = 0; i < s->d; i++) printf("B[%d] = %lf\n", i, B[i]);
 
-    double yVal = 0;
+    // for each data point
     for (int i = 0; i < s->n; i++)
     {
+        // range of spline: x[i] to x[i+1]
         for (int j = s->x[i]; j < s->x[i + 1]; j++)
         {
-            yVal = s->y[i] + ((s->y[i + 1] - s->y[i]) / (s->x[i + 1] - s->x[i])) * (j - s->x[i])
-                   + A[i] *    (j - s->x[i])    * (j - s->x[i + 1])
-                   + B[i] * pow(j - s->x[i], 2) * (j - s->x[i + 1]);
-            G_point(j, yVal);
+            // Plot Cubic Spline
+            G_point(j, C(s->x, s->y, i, j, s->A, s->B));
         }
     }
-
-//    double yVal = 0;
-//    for (int i = 1; i <= s->n; ++i)
-//    {
-//        for (int j = s->x[i - 1]; j < s->x[i]; ++j)
-//        {
-//            yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
-//                   + A[i - 1] *    (j - s->x[i - 1])    * (j - s->x[i])
-//                   + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
-//            G_point(j, yVal);
-//        }
-//    }
 
     G_wait_key();
 
     printf("\tLog - calculate: Splines successfully calculated...\n");
 }
 
-//double C(double )
-//{
-//
-//    yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
-//           + A[i - 1] * (j - s->x[i - 1]) * (j - s->x[i])
-//           + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
-//
-//    yVal = s->y[i - 1] + ((s->y[i] - s->y[i - 1]) / (s->x[i] - s->x[i - 1])) * (j - s->x[i - 1])
-//           + A[i - 1] * (j - s->x[i - 1]) * (j - s->x[i])
-//           + B[i - 1] * pow(j - s->x[i - 1], 2) * (j - s->x[i]);
-//
-//    return 0;
-//}
+
 
 
 /* Print Tridiagonal Matrix

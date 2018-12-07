@@ -39,7 +39,7 @@
 
 
 //====================================================================
-// X stuff :
+// coefficients stuff :
 
 
 #include <X11/X.h>
@@ -922,7 +922,7 @@ int Polygon_X (int *x, int *y, int npts)
    if (npts <= 0) return 0 ;
 
    if (npts > 1000) {
-      printf("\nPolygon+X has been asked to deal with %d points.\n",
+      printf("\nPolygon+coefficients has been asked to deal with %d points.\n",
              npts) ;
       printf("Points past first 1000 ignored.\n") ;
       npts = 1000 ;
@@ -953,7 +953,7 @@ int Polygon_DX (double *x, double *y, double Dnpts)
    if (npts <= 0) return 0 ;
 
    if (npts > 1000) {
-      printf("\nPolygon+X has been asked to deal with %d points.\n",
+      printf("\nPolygon+coefficients has been asked to deal with %d points.\n",
              npts) ;
       printf("Points past first 1000 ignored.\n") ;
       npts = 1000 ;

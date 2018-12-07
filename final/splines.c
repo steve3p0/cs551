@@ -3,16 +3,12 @@
  * CS 551
  *
  * Source and References:
- *   - Quadratic FPToolkit.c - Dr. David Ely
+ *   - FPToolkit.c - Dr. David Ely
+ *   - Gaussian Elimination - Dr. David Ely
  *   - https://en.wikipedia.org/wiki/B-spline
  *   - https://en.wikipedia.org/wiki/Spline_interpolation
  *   - https://en.wikipedia.org/wiki/Spline_(mathematics)
  *
- * Dependencies:
- *   - X11 Lib https://www.x.org/wiki/ProgrammingDocumentation/
- *   - LeastSquares.h      - Steve Braich
- *   - LeastSquaresTests.h - Steve Braich
- *   - FPToolkit.h         - Dr. David Ely
  * ======================================================================================================
  * PARTS OF THIS CODE WERE TAKEN FROM THE FOLLOWING:
  *
@@ -55,9 +51,8 @@
  * ======================================================================================================
  *  If this file and the following files are in the same directory:
  *
- *  - bsplines.c (this file)
- *  - bsplines.h
- *  - bsplines.h
+ *  - splines.c (this file)
+ *  - splines.h
  *  - FPToolkit.h
  *
  *  do the following to compile:
@@ -163,21 +158,27 @@ void draw_window()
 {
     // Draw the window
     G_init_graphics(800, 600);
-    G_rgb(0.3,0.3,0.3);
+
+    // clear the screen in a given color
+    G_rgb(0.3, 0.3, 0.3);
     G_clear();
-    G_rgb(1,1,0);
+
+    // Let's make it red
+    G_rgb(1, 0, 0);
 }
 
 /* Save the User's Clicks
  * Save each one of the users clicks as an x, y coordinate
  * that are the knots that join the cubic splines
  */
-void *save_user_clicks(int n, double *x, double *y)
+void *save_user_clicks(Spline *s)
 {
+    s->Init(s);
+
     double point[2];
 
     // Fill the data points array with user clicks
-    for(int i = 0; i < n; ++i)
+    for(int i = 0; i < s->n; ++i)
     {
         // Wait for the user to click
         G_wait_click(point);
@@ -186,8 +187,8 @@ void *save_user_clicks(int n, double *x, double *y)
         G_fill_circle(point[0], point[1], 2);
 
         // Convert double[2] to Point typedef
-        x[i] = point[0];
-        y[i] = point[1];
+        s->x[i] = point[0];
+        s->y[i] = point[1];
     }
 }
 
@@ -208,7 +209,7 @@ int main()
         printf("\tNatural Cubic Splines Graphing Tool\n");
         printf("\t----------------------------------------------------\n\n");
         printf("\tEnter 'g' to Run Graphics Test (FP Toolkit)\n");
-        printf("\tEnter 't' to Run Automated Tests\n");
+        //printf("\tEnter 't' to Run Automated Tests\n");
         printf("\tEnter 'f' to Load Data Points from a File\n");
         printf("\tEnter 'q' to Quit\n\n");
         printf("\tOr enter the number of points to create splines from: ");
@@ -220,14 +221,13 @@ int main()
         int n = strtol(menu, &ptr, 10);
         printf("\n");
 
-        double x[M];
-        double y[M];
-
         if (n > 0 && n < 101)
         {
             draw_window();
 
             Spline *s = new();
+            s->n = n;
+
             s->Load = save_user_clicks;
             s->Draw = plot;
 
@@ -239,7 +239,6 @@ int main()
 
             G_wait_key();
             G_close();
-
         }
         else if (strlen(menu) == 1)
         {
