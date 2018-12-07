@@ -183,7 +183,7 @@ void *save_user_clicks(Spline *s)
         // Wait for the user to click
         G_wait_click(point);
 
-        // What is this doing?
+        // Plot the point
         G_fill_circle(point[0], point[1], 2);
 
         // Convert double[2] to Point typedef
@@ -196,7 +196,23 @@ void *save_user_clicks(Spline *s)
  * Plot the cubic splines respresented by the tridiagonal Matrix
  */
 void *plot(Spline *s)
-{}
+{
+    // For each data point
+    for (int i = 0; i < s->n; i++)
+    {
+        // Draw the Natural cubic spline between them
+        for (int j = s->x[i]; j < s->x[i + 1]; j++)
+        {
+            // Plot Cubic Spline
+            G_point(j, C(s->x, s->y, i, j, s->A, s->B));
+        }
+
+        // Plot the actual data points
+        G_fill_circle(s->x[i], s->y[i], 2);
+    }
+
+    G_wait_key();
+}
 
 /* Main Menu
  * TODO: Figure out a way to make menus testable.
@@ -258,15 +274,15 @@ int main()
                     //test_newton();
                     break;
                 case 'F':
-
-                    draw_window();
-
+                    ; // <-- labels like case have to precede statements
                     Spline *s = new();
                     s->Draw = plot;
 
                     s->Load(s);
+                    draw_window();
                     s->Calculate(s);
                     //s->Print(s);
+
                     s->Draw(s);
                     s->Destroy(s);
 

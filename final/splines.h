@@ -80,36 +80,39 @@ void *read_file(Spline *s)
     char cwd[100];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
     {
-        printf("Current working dir: %s\n", cwd);
+        printf("\tCurrent working dir: %s\n", cwd);
     }
 
-    printf("Enter in a filename: ");
+    printf("\tEnter in a filename (local, relative, or full path): ");
     char filename[100];
     scanf("%s", filename);
 
-    FILE *f = fopen(filename, "r");
-    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
-    //FILE *f = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
+    FILE *file = fopen(filename, "r");
+    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
+    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
 
-    if (f == NULL)
+    if (file == NULL)
     {
-        printf("File I/O Error");
-        exit(0);
+        printf("File I/O Error\n");
+    }
+    else
+    {
+        // Get the number of points
+        fscanf(file, "%d", &s->n);
+
+        s->Init(s);
+
+        // Load in all the points
+        for (int i = 0; i < s->n; i++)
+        {
+            fscanf(file, "%lf %lf\n", &s->x[i], &s->y[i]);
+        }
+
+        fclose(file);
     }
 
-    fscanf(f, "%d", &s->n);
-
-    s->Init(s);
-
-    for (int i = 0; i < s->n; i++)
-    {
-        fscanf(f, "%lf %lf\n", &s->x[i], &s->y[i]);
-        //TODO: G_load_rectangle(x[i] - 2.0, y[i] - 2.0, 5.0, 5.0);
-    }
-
-    fclose(f);
-
-    printf("\tLog - read_file: Splines successfully read from file...\n");
+    printf("\n\n");
+    //printf("\tLog - read_file: Splines successfully read from file...\n");
 }
 
 /* Print Matrix
@@ -282,24 +285,8 @@ void *calculate(Spline *s)
         s->B[j] = s->coefficients[i + 1];
     }
 
-
-    // for each data point
-    for (int i = 0; i < s->n; i++)
-    {
-        // range of spline: x[i] to x[i+1]
-        for (int j = s->x[i]; j < s->x[i + 1]; j++)
-        {
-            // Plot Cubic Spline
-            G_point(j, C(s->x, s->y, i, j, s->A, s->B));
-        }
-    }
-
-    G_wait_key();
-
-    printf("\tLog - calculate: Splines successfully calculated...\n");
+    //printf("\tLog - calculate: Splines successfully calculated...\n");
 }
-
-
 
 
 /* Print Tridiagonal Matrix
@@ -307,6 +294,9 @@ void *calculate(Spline *s)
  */
 void *print_tridiagonal(Spline *s)
 {
+    printf("Tridiagonal Matrix\n");
+    printf("------------------\n\n");
+
     for (int i = 0; i < s->d; i++)
     {
         for (int j = 0; j < s->d + 1; j++)
@@ -323,7 +313,8 @@ void *print_tridiagonal(Spline *s)
         printf("\n");
     }
 
-    printf("\tLog - print: Tridiagonal matrix successfully printed...\n");
+    printf("\n\n");
+    //printf("\tLog - print: Tridiagonal matrix successfully printed...\n");
 }
 
 /* Deconstructor
@@ -345,7 +336,7 @@ void *destroy(Spline *s)
 
     realloc(s, 0);
 
-    printf("\tLog - destroy: Splines successfully deallocated...\n");
+    //printf("\tLog - destroy: Splines successfully deallocated...\n");
 }
 
 /* Constructor for spline object
@@ -370,7 +361,7 @@ Spline *new()
     // Private members
     s->Init = init;
 
-    printf("\tLog - new: Splines successfully allocated...\n");
+    //printf("\tLog - new: Splines successfully allocated...\n");
 
     return s;
 }
