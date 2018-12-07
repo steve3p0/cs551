@@ -151,6 +151,50 @@ void test_fpitoolkit_graphics()
     G_save_image_to_file("demo.xwd") ;
 }
 
+/* Read File as Data Points
+ * Read data from the file into n (number of points) and the x and y arrays
+ */
+void *read_file(Spline *s)
+{
+    // Get current working directory
+    char cwd[100];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
+        printf("\tCurrent working dir: %s\n", cwd);
+    }
+
+    printf("\tEnter in a filename (local, relative, or full path): ");
+    char filename[100];
+    scanf("%s", filename);
+
+    FILE *file = fopen(filename, "r");
+    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
+    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
+
+    if (file == NULL)
+    {
+        printf("File I/O Error\n");
+    }
+    else
+    {
+        // Get the number of points
+        fscanf(file, "%d", &s->n);
+
+        s->New(s);
+
+        // Load in all the points
+        for (int i = 0; i < s->n; i++)
+        {
+            fscanf(file, "%lf %lf\n", &s->x[i], &s->y[i]);
+        }
+
+        fclose(file);
+    }
+
+    printf("\n\n");
+    //printf("\tLog - read_file: Splines successfully read from file...\n");
+}
+
 /* Draw Window for Graphing
  * Create the Window to draw natural cubic splines
  */
@@ -173,7 +217,7 @@ void draw_window()
  */
 void *save_user_clicks(Spline *s)
 {
-    s->Init(s);
+    s->New(s);
 
     double point[2];
 
@@ -241,7 +285,7 @@ int main()
         {
             draw_window();
 
-            Spline *s = new();
+            Spline *s = init();
             s->n = n;
 
             s->Load = save_user_clicks;
@@ -275,7 +319,10 @@ int main()
                     break;
                 case 'F':
                     ; // <-- labels like case have to precede statements
-                    Spline *s = new();
+                    Spline *s = init();
+                    // Load is set to read from a file by default
+                    // This can be overridden by the client main function (user clicks)
+                    s->Load = read_file;
                     s->Draw = plot;
 
                     s->Load(s);

@@ -133,9 +133,9 @@ int Resize_window_X_helper (int request[2])
 
 
     if ((ww > Xx_Pix_width)|| (hh > Xx_Pix_height)) {
-	  // at least one of the dimensions of the new window
+	  // at least one of the dimensions of the init window
 	  // is larger than the current pixmap
-          // printf("at least one dimension of new win is larger than pixmaxp\n") ;
+          // printf("at least one dimension of init win is larger than pixmaxp\n") ;
 
 	  // create a tmp pixmap and copy current pixmap to it
           Xx_Tmp_width = Xx_Pix_width ;
@@ -154,7 +154,7 @@ int Resize_window_X_helper (int request[2])
           XFreeGC(XxDisplay, XxPixmapContext);
 	  XFreePixmap(XxDisplay, XxPixmap);
 
-	  // construct new pixmap
+	  // construct init pixmap
 	  // don't make either dimension smaller
           if (ww > Xx_Pix_width)  Xx_Pix_width = ww ;
           if (hh > Xx_Pix_height) Xx_Pix_height = hh ;
@@ -452,7 +452,7 @@ int Handle_Events_X(int *px, int *py)
         // printf("Expose\n") ;
 
         Copy_Buffer_And_Flush_X() ;
-             // this is new ... when the window is uncovered
+             // this is init ... when the window is uncovered
 	     // this will regenerate it from the buffer
 	*px = 0 ; *py = 0 ;
         retval = -1 ; 
@@ -1677,7 +1677,7 @@ int Set_Color_Rgb_X (int r, int g, int b)
   p = (r << 16) | (g  << 8) | (b) ;
   XSetForeground(XxDisplay, XxPixmapContext, p) ;
 
-  // new
+  // init
   Current_Red_Int   = r ;
   Current_Green_Int = g ;
   Current_Blue_Int  = b ;
@@ -2235,7 +2235,7 @@ static int sector(double xcenter, double ycenter, double radius,
   if (num < 1) { num = 1 ; }
   else if (num > 500) { num = 500 ; }
 
-  //  printf("new num = %d\n",num) ;
+  //  printf("init num = %d\n",num) ;
 
   j = 0 ; 
   while (j <= num) {

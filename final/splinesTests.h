@@ -119,7 +119,7 @@ int test_splines()
     // I have to create multiple instances of them.  I free up the memory
     // for each one in function 'run_test'
     count++;
-    Spline *s = new();
+    Spline *s = init();
     s->n = 6;
     s->d = 10;
     double x[s->n] = { 177.00, 249.00, 311.00, 381.00, 416.00, 455.00 };

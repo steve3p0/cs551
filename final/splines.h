@@ -39,7 +39,7 @@ typedef struct spline
     // Load is set to read from a file by default
     // This can be overridden by the client main function (user clicks)
     void (*Load) ();
-    void (*Init) ();
+    void (*New) ();
     void (*Calculate) ();
     void (*Print)(const struct spline*);
 
@@ -51,7 +51,7 @@ typedef struct spline
 
 } Spline;
 
-void init(Spline *s)
+void new(Spline *s)
 {
     s->d = 2 * (s->n - 1);
 
@@ -69,50 +69,6 @@ void init(Spline *s)
 
     s->A = (double*)malloc(M*sizeof(double));
     s->B = (double*)malloc(M*sizeof(double));
-}
-
-/* Read File as Data Points
- * Read data from the file into n (number of points) and the x and y arrays
- */
-void *read_file(Spline *s)
-{
-    // Get current working directory
-    char cwd[100];
-    if (getcwd(cwd, sizeof(cwd)) != NULL)
-    {
-        printf("\tCurrent working dir: %s\n", cwd);
-    }
-
-    printf("\tEnter in a filename (local, relative, or full path): ");
-    char filename[100];
-    scanf("%s", filename);
-
-    FILE *file = fopen(filename, "r");
-    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/spline_test_data_2", "r");
-    //FILE *file = fopen("/home/steve/workspace_psu/cs551/final/final_test_1_input", "r");
-
-    if (file == NULL)
-    {
-        printf("File I/O Error\n");
-    }
-    else
-    {
-        // Get the number of points
-        fscanf(file, "%d", &s->n);
-
-        s->Init(s);
-
-        // Load in all the points
-        for (int i = 0; i < s->n; i++)
-        {
-            fscanf(file, "%lf %lf\n", &s->x[i], &s->y[i]);
-        }
-
-        fclose(file);
-    }
-
-    printf("\n\n");
-    //printf("\tLog - read_file: Splines successfully read from file...\n");
 }
 
 /* Print Matrix
@@ -342,15 +298,12 @@ void *destroy(Spline *s)
 /* Constructor for spline object
  * Allocate memory for spline object and intialize values
  */
-Spline *new()
+Spline *init()
 {
     Spline *s = (Spline*)malloc(sizeof(Spline));
 
     s->n = 0;
 
-    // Load is set to read from a file by default
-    // This can be overridden by the client main function (user clicks)
-    s->Load = read_file;
     s->Calculate = calculate;
     s->Print = print_tridiagonal;
 
@@ -359,9 +312,9 @@ Spline *new()
     s->Destroy = destroy;
 
     // Private members
-    s->Init = init;
+    s->New = new;
 
-    //printf("\tLog - new: Splines successfully allocated...\n");
+    //printf("\tLog - init: Splines successfully allocated...\n");
 
     return s;
 }
