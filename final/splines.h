@@ -10,9 +10,9 @@
 #ifndef SPLINES_H
 #define SPLINES_H
 
-#include "gauss_elimS.h"
+//#include "gauss_elimS.h"
 
-#define M 100
+#define M 20
 
 typedef struct spline
 {
@@ -27,9 +27,11 @@ typedef struct spline
     double *L;  // Left Diagonal
     double *Q;  // Q Vector
 
-    double **tridiagonal;
+    //double **tridiagonal;
+    double tridiagonal[M][M + 1];
 
-    double *X;
+    //double *X;
+    double X[M];
 
     double *A;  // A Coefficients
     double *B;  // B Coefficients
@@ -72,7 +74,7 @@ void load_diagonals(Spline *s)
         s->Q[i - 1] = ((s->y[j + 1] - s->y[j])     / (s->x[j + 1] - s->x[j]))
                     - ((s->y[j]     - s->y[j - 1]) / (s->x[j]     - s->x[j - 1]));
 
-        printf("D[%d] = %lf\n", i, s->D[i]);
+        //printf("D[%d] = %lf\n", i, s->D[i]);
     }
 
     // B1, B2, B3, B4, B5... Bn-1
@@ -90,7 +92,7 @@ void load_diagonals(Spline *s)
 
         s->Q[i + 1] = -s->Q[i];
 
-        printf("D[%d] = %lf\n", i, s->D[i]);
+        //printf("D[%d] = %lf\n", i, s->D[i]);
     }
 
     // A1 = 1
@@ -127,12 +129,20 @@ void init(Spline *s)
     s->Q = (double*)malloc(M*sizeof(double));
 
 
-    //s->tridiagonal = (double *)malloc(M * M * sizeof(double));
-    s->tridiagonal = (double **)malloc(M * sizeof(double *));
-    for (int i = 0; i < M; i++)
-        s->tridiagonal[i] = (double *)malloc((M + 1) * sizeof(double));
+//    //s->tridiagonal = (double *)malloc(M * M * sizeof(double));
+//    s->tridiagonal = (double **)malloc(M * sizeof(double *));
+//    for (int i = 0; i < M; i++)
+//        s->tridiagonal[i] = (double *)malloc((M + 1) * sizeof(double));
+//
+    for (int i = 0; i < s->d + 1; ++i)
+    {
+        for (int j = 0; j < s->d; ++j)
+        {
+            s->tridiagonal[i][j] = 0;
+        }
+    }
 
-    s->X = (double*)malloc(M*sizeof(double));
+    //s->X = (double*)malloc(M*sizeof(double));
 }
 
 /* Read File as Data Points
@@ -164,6 +174,163 @@ void *read_file(Spline *s)
     printf("\tLog - read_file: Splines successfully read from file...\n");
 }
 
+/* Print Matrix
+ * Print a 2-D Array. Used for Debugging
+ */
+void print_matrix(double m[M][M + 1], int n)
+{
+//    int r, c;
+//
+//    for (r = 0; r < n; r++)
+//    {
+//        for (c = 0; c <= n; c++)
+//        {
+//            printf(" %10.3lf", m[r][c]);
+//        }
+//        printf("\n");
+//
+//    }
+//    printf("\n");
+
+    for (int i = 0; i < n; i++)
+    {
+        for (int j = 0; j < n + 1; j++)
+        {
+            printf(" %10.3lf", m[i][j]);
+        }
+        printf("\n");
+    }
+}
+
+int gaussian_elimination1(double m[M][M + 1], int n, double x[M])
+// return 1 for success, 0 for failure
+{
+    int i, j, k;
+    double v, sum;
+
+    // reduce matrix to upper triangular form
+
+    for (j = 0; j < n - 1; j++)
+    {
+
+        // print_matrix(m,n) ;
+
+        if (m[j][j] == 0)
+        { return 0; }
+
+        for (k = j + 1; k < n; k++)
+        {
+
+            v = m[k][j] / m[j][j];
+            for (i = 0; i <= n; i++)
+            {
+                m[k][i] = m[k][i] - v * m[j][i];
+            }
+
+        }
+
+
+    }
+
+    // Output the upper triangular form
+    //   print_matrix(m,n) ;
+
+
+    // Now do the back substitution
+    for (j = n - 1; j >= 0; j--)
+    {
+
+        sum = 0.0;
+        for (k = j + 1; k < n; k++)
+        {
+            sum += (m[j][k] * x[k]);
+        }
+
+        if (m[j][j] == 0)
+        { return 0; }
+
+        x[j] = (m[j][n] - sum) / m[j][j];
+    }
+
+
+    return 1;
+}
+
+int gaussian_elimination(double m[M][M + 1], int n, double x[M])
+{
+    int i, j, k;
+    double v, sum;
+    int max_row, c;
+
+    // reduce matrix to upper triangular form
+
+    for (j = 0; j < n - 1; j++)
+    {
+        // search from row j+1 down to find the largest magnitude
+        max_row = j;
+        for (k = j + 1; k < n; k++)
+        {
+            if (fabs(m[k][j]) > fabs(m[max_row][j]))
+            { max_row = k; }
+        }
+        if (max_row != j)
+        {
+            // swap rows
+            for (c = j; c <= n; c++)
+            {
+                v = m[j][c];
+                m[j][c] = m[max_row][c];
+                m[max_row][c] = v;
+            }
+        }
+
+        if (m[j][j] == 0)
+        { return 0; }
+
+        for (k = j + 1; k < n; k++)
+        {
+
+            v = m[k][j] / m[j][j];
+            for (i = 0; i <= n; i++)
+            {
+                m[k][i] = m[k][i] - v * m[j][i];
+            }
+
+        }
+
+
+    }
+
+////////////////////////////////////////////
+
+    // Now do the back substitution
+    for (j = n - 1; j >= 0; j--)
+    {
+
+        sum = 0.0;
+        for (k = j + 1; k < n; k++)
+        {
+            sum += (m[j][k] * x[k]);
+        }
+
+        if (m[j][j] == 0)
+        { return 0; }
+
+        x[j] = (m[j][n] - sum) / m[j][j];
+    }
+
+    /*
+    for (j = 0 ; j < n ; j++) {
+      printf("x[%d] = %.16lf\n",j,x[j]) ;
+    }
+    printf("\n") ;
+    */
+
+    return 1;
+}
+
+
+
 /* Calculate Natural Splines
  * Process the calculations for loading the tridiagonal matrix
  */
@@ -188,11 +355,52 @@ void *calculate(Spline *s)
 
     s->Print(s);
 
-    // do gaussian elimination
-    gaussian_elimination(s->tridiagonal, s->n, s->X);
-    print_matrix(s->X, s->n);
+    printf("DEBUG: print tridiagonal matrix.... LET'S TAKE A LOOKN\n");
+    //print_matrix(s->tridiagonal, M);
+    print_matrix(s->tridiagonal, s->d);
 
-    // draw cubic
+//    for (int i = 0; i < s->d; i++)
+//    {
+//        s->tridiagonal[i][i]     = s->D[i + 1];
+//        s->tridiagonal[i][i + 1] = s->R[i + 1];
+//        s->tridiagonal[i + 1][i] = s->L[i + 2];
+//        s->tridiagonal[i][s->d]  = s->Q[i + 1];
+//    }
+
+    // Looks like gauss - elimnation.
+//    for (int i = 0; i < s->d; i++)
+//    {
+//        s->tridiagonal[i][i + 1] = s->D[i + 1];
+//        s->tridiagonal[i][i]     = s->L[i + 1];
+//        s->tridiagonal[i][i + 2] = s->R[i + 1];
+//        s->tridiagonal[i][s->d]  = s->Q[i];
+//    }
+
+//    for (int i = 0; i < s->d - 1; i++)
+//    {
+//        s->tridiagonal[i][i + 1] = s->R[i + 1];
+//        s->tridiagonal[i + 1][i] = s->L[i + 2];
+//    }
+
+//    // Load L and R into Matrix
+//    for (int i = 0; i < s->d - 1; ++i)
+//    {
+//        s->tridiagonal[i][i + 1] = s->R[i];
+//        s->tridiagonal[i + 1][i] = s->L[i + 1];
+//    }
+//
+//    // Load Q into the matrix
+//    for (int i = 0; i < s->d; ++i)
+//    {
+//        s->tridiagonal[i][s->d] = s->Q[i];
+//    }
+
+    // do gaussian elimination
+    gaussian_elimination(s->tridiagonal, s->d, s->X);
+    printf("DEBUG: print X matrix.... GAUSSIAN ELIMINATION\n");
+    print_matrix(s->X, s->d);
+
+    // draw!!!
     for (int i = 1; i <= s->n; i++)
     {
 
@@ -205,7 +413,10 @@ void *calculate(Spline *s)
     printf("\tLog - calculate: Splines successfully calculated...\n");
 }
 
-void print(Spline *s)
+/* Print Tridiagonal Matrix
+ * Print the matrix in the format specified by Dr. Ely
+ */
+void *print_tridiagonal(Spline *s)
 {
     for (int i = 0; i < s->d; i++)
     {
@@ -223,7 +434,7 @@ void print(Spline *s)
         printf("\n");
     }
 
-    printf("\tLog - print: Splines successfully printed...\n");
+    printf("\tLog - print: Tridiagonal matrix successfully printed...\n");
 }
 
 /* Deconstructor
@@ -231,7 +442,6 @@ void print(Spline *s)
  */
 void *destroy(Spline *s)
 {
-
     //free(s->D);
 
     realloc(s->x, 0);
@@ -262,7 +472,7 @@ Spline *new()
     // This can be overridden by the client main function (user clicks)
     s->Load = read_file;
     s->Calculate = calculate;
-    s->Print = print;
+    s->Print = print_tridiagonal;
 
     // Draw is virtual.  It must be defined in the client
     //s->Draw = draw;
