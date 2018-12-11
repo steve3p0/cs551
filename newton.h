@@ -161,9 +161,8 @@ void *print_roots(Newton *n)
 {
     for(int k = 0; k < MAX_ITERATIONS; k++)
     {
-        printf("root = %lf + %lfi\n", n->a[k], n->b[k]);
+        printf("root (k = %02d) = %+lf + %+lfi\n",k, n->a[k], n->b[k]);
     }
-
 }
 
 void *destroy(Newton *n)

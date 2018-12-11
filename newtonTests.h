@@ -152,12 +152,178 @@ void print(Test *t)
 
 void test_dummy(char *testname, Test *t)
 {
+    //pass(testname, t);
+    fail(testname, t);
+}
 
+
+////// Integration TESTS ////////////////////////////////////
+
+void test_solve_wiki(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  30;
+    // Guess Imaginary
+    n->gi = -30;
+
+    // Degree of Polynomial
+    n->deg  = 2;
+
+    // Enter Coefficients
+    n->coef[0] = 612;
+    n->coef[1] = 0;
+    n->coef[2] = 1;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
 
     //pass(testname, t);
     fail(testname, t);
 }
 
+void test_solve_graded_input1(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  -5;
+    // Guess Imaginary
+    n->gi = -5;
+
+    // Degree of Polynomial
+    n->deg  = 1;
+
+    // Enter Coefficients
+    n->coef[0] = 12;
+    n->coef[1] =  3;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
+
+    //pass(testname, t);
+    fail(testname, t);
+}
+
+void test_solve_graded_input2(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  -2;
+    // Guess Imaginary
+    n->gi = -2;
+
+    // Degree of Polynomial
+    n->deg  = 3;
+
+    // Enter Coefficients
+    n->coef[0] = 1;
+    n->coef[1] = 1;
+    n->coef[2] = 1;
+    n->coef[3] = 1;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
+
+    //pass(testname, t);
+    fail(testname, t);
+}
+
+void test_solve_graded_input3(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  3;
+    // Guess Imaginary
+    n->gi = -3;
+
+    // Degree of Polynomial
+    n->deg  = 4;
+
+    // Enter Coefficients
+    n->coef[0] = -16;
+    n->coef[1] = 0;
+    n->coef[2] = 0;
+    n->coef[3] = 0;
+    n->coef[4] = 1;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
+
+    //pass(testname, t);
+    fail(testname, t);
+}
+
+void test_solve_graded_input4(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  3;
+    // Guess Imaginary
+    n->gi = -3;
+
+    // Degree of Polynomial
+    n->deg  = 4;
+
+    // Enter Coefficients
+    n->coef[0] = -63;
+    n->coef[1] = -6;
+    n->coef[2] = 1640;
+    n->coef[3] = 3716;
+    n->coef[4] = 1587;
+    n->coef[5] = 126;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
+
+    //pass(testname, t);
+    fail(testname, t);
+}
+
+void test_solve_graded_input5(char *testname, Test *t)
+{
+    Newton *n = init();
+
+    // Guess real
+    n->gr =  0;
+    // Guess Imaginary
+    n->gi = 2;
+
+    // Degree of Polynomial
+    n->deg  = 4;
+
+    // Enter Coefficients
+    n->coef[0] = -1;
+    n->coef[1] = 0;
+    n->coef[2] = 0;
+    n->coef[3] = 0;
+    n->coef[4] = 0;
+    n->coef[5] = 0;
+    n->coef[6] = 0;
+    n->coef[7] = 1;
+
+    // Now Solve it!
+    n->Solve(n);
+    n->Print(n);
+    n->Destroy(n);
+
+    //pass(testname, t);
+    fail(testname, t);
+}
 
 // TODO: Finish rest of unit tests
 int test_runner()
@@ -166,12 +332,20 @@ int test_runner()
 
     Test *t = init_test();
 
-    test_dummy("test_dummy1", t);
-    test_dummy("test_dummy2", t);
-    test_dummy("test_dummy3", t);
+    test_solve_wiki("test_solve: Wikipedia Example: f(x) = x^2 - 612", t);
+    test_solve_graded_input1("test_solve: graded input 1: f(x) = 3x + 12", t);
+    test_solve_graded_input2("test_solve: graded input 2: f(x) = x^3 + x^2 + x + 1", t);
+
+    // These one is fucked up
+    test_solve_graded_input3("test_solve: graded input 3: f(x) = x^4 - 16", t);
+
+    // This has multiple roots
+    test_solve_graded_input4("test_solve: graded input 4: f(x) = 126x^5 + 1587x^4 + 3716x^3 + 1640x^2 - 6x - 63", t);
+
+    // fucked up: root (k = 00) = +inf + -nani
+    test_solve_graded_input5("test_solve: graded input 5: f(x) = x^7 - 1", t);
 
     print(t);
-
     free(t);
 }
 
