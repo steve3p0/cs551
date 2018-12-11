@@ -131,23 +131,54 @@ int test_dummy1(char *testname, char *output)
 
 //////////////////////////////////////////////////////
 
+Test *init()
+{
+    Test *t = malloc(sizeof(Test));
+    t->index = 0;
+    t->count = 0;
+    t->pass = 0;
+}
+
+void pass(char *testname, Test *t)
+{
+    strcpy(t->testname[t->index], testname);
+    strcpy(t->results[t->index], "FAIL");
+
+    t->pass++;
+    t->index++;
+    t->count++;
+}
+
+void fail(char *testname, Test *t)
+{
+    strcpy(t->testname[t->index], testname);
+    strcpy(t->results[t->index], "FAIL");
+
+    t->index++;
+    t->count++;
+}
+
+
+void print(Test *t)
+{
+    for (int i = 0; i < t->count; i++)
+    {
+        //printf("%d: (%s) - (%s)\n", i, t->testname[i], t->results[i]);
+        printf("\t%s - %s\n", t->results[i], t->testname[i]);
+    }
+
+    printf("\nTest Runner: %d out of %d tests PASSED\n", t->pass, t->count);
+}
+
+//////////////////////////////////////////////////////
+
 
 void test_dummy(char *testname, Test *t)
 {
 
-    strcpy(t->testname[t->index], testname);
 
-    // PASS
-    //*t->results[t->index] = "PASS";
-    strcpy(t->results[t->index], "PASS");
-    t->pass++;
-    //strcpy(t->results[t->index], "PASS");
-
-    // FAIL
-    //strcpy(t->results[t->index], "FAIL");
-
-    t->index++;
-    t->count++;
+    //pass(testname, t);
+    fail(testname, t);
 }
 
 
@@ -156,36 +187,13 @@ int test_runner()
 {
     printf("\nRunning Tests...\n\n");
 
-    //char test_output[1] = " ";
-    //char *test_output = concat("Fuck ", "Off");
-    char *test_output = "fuck strings in C";
-
-    Test *t = malloc(sizeof(Test));
-    t->index = 0;
-    t->count = 0;
-    t->pass = 0;
+    Test *t = init();
 
     test_dummy("test_dummy1", t);
     test_dummy("test_dummy2", t);
     test_dummy("test_dummy3", t);
 
-    for (int i = 0; i < t->count; i++)
-    {
-        //printf("%d: (%s) - (%s)\n", i, t->testname[i], t->results[i]);
-        printf("\t%s - %s\n", t->results[i], t->testname[i]);
-    }
-
-//    count++;
-//    pass += test_dummy("test_dummy1", test_output);
-//
-//    count++;
-//    pass += test_dummy("test_dummy2", test_output);
-//
-//    count++;
-//    pass += test_dummy("test_dummy3", test_output);
-//
-//    printf("%s", test_output);
-//    printf("\nTest Runner: %d out of %d tests PASSED\n", pass, count);
+    print(t);
 
     //free(test_output); // deallocate the string
 }
