@@ -37,7 +37,7 @@ typedef struct test
 
 } Test;
 
-// Used to evaluate eequality of double (floating point numbers)
+// Used to evaluate equality of double (floating point numbers)
 // https://stackoverflow.com/questions/17333/what-is-the-most-effective-way-for-float-and-double-comparison
 bool Equality(double a, double b, double epsilon)
 {
@@ -108,30 +108,9 @@ char *concat1(char *s1, char *s2)
     return result;
 }
 
-
-////////////////////////////////////////////////////
-
-int test_dummy1(char *testname, char *output)
-{
-    //printf("PASS - %s\n", test_name);
-    //printf("FAIL - %s\n", test_name);
-
-
-//    char *s = concat("PASS - ", test_name);
-//    //s = concat(s, "\n");
-//    output = concat(output, s);
-
-    //char *new_str;
-    //asprintf(&new_str,"%s%s",str1,str2);
-
-//    asprintf(&new_str,"%s%s",str1,str2);
-
-    return 1;
-}
-
 //////////////////////////////////////////////////////
 
-Test *init()
+Test *init_test()
 {
     Test *t = malloc(sizeof(Test));
     t->index = 0;
@@ -158,7 +137,6 @@ void fail(char *testname, Test *t)
     t->count++;
 }
 
-
 void print(Test *t)
 {
     for (int i = 0; i < t->count; i++)
@@ -171,7 +149,6 @@ void print(Test *t)
 }
 
 //////////////////////////////////////////////////////
-
 
 void test_dummy(char *testname, Test *t)
 {
@@ -187,7 +164,7 @@ int test_runner()
 {
     printf("\nRunning Tests...\n\n");
 
-    Test *t = init();
+    Test *t = init_test();
 
     test_dummy("test_dummy1", t);
     test_dummy("test_dummy2", t);
@@ -195,10 +172,7 @@ int test_runner()
 
     print(t);
 
-    //free(test_output); // deallocate the string
+    free(t);
 }
-
-
-
 
 #endif //NEWTON_NEWTONTESTS_H
